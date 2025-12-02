@@ -10,21 +10,24 @@ const AnnouncementBar: React.FC = () => {
         "METABAILE 2025"
     ];
 
-    // Duplicate the messages to ensure smooth scrolling
-    const displayMessages = [...messages, ...messages, ...messages, ...messages];
+    // Create a single string of messages separated by bullets
+    const singleSet = messages.map(msg => `${msg} •`).join('   ');
 
     return (
-        <div className="bg-transparent border-b border-brand-dark/5 overflow-hidden py-2.5 relative z-50">
+        <div className="bg-transparent overflow-hidden py-2.5 relative z-50">
             {/* Fade edges for smoother look */}
             <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-brand-light to-transparent z-20"></div>
             <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-brand-light to-transparent z-20"></div>
 
+            {/* 
+                We render the full set of messages 4 times.
+                The animation moves -50%, so we need enough content to cover that width seamlessly.
+            */}
             <div className="whitespace-nowrap animate-marquee flex items-center relative z-10">
-                {displayMessages.map((msg, index) => (
-                    <span key={index} className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase inline-block mx-4 font-display">
-                        {msg} •
-                    </span>
-                ))}
+                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase inline-block mx-4 font-display">{singleSet}</span>
+                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase inline-block mx-4 font-display">{singleSet}</span>
+                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase inline-block mx-4 font-display">{singleSet}</span>
+                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase inline-block mx-4 font-display">{singleSet}</span>
             </div>
         </div>
     );
