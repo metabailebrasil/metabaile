@@ -32,14 +32,31 @@ create table public.messages (
   content text not null,
   user_id uuid references auth.users(id) not null,
   room_id uuid references public.chat_rooms(id) on delete cascade, -- NULL means Public Chat
+  stream_id uuid, -- Optional: to distinguish between different live streams
   user_meta jsonb, -- Cache user info (name, avatar) to avoid complex joins on read
+  role_badge text default 'user', -- 'user', 'vip', 'admin', 'moderator'
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Index for faster cleanup
+create index idx_messages_created_at on public.messages(created_at);
 
 -- Enable RLS
 alter table public.chat_rooms enable row level security;
 alter table public.room_members enable row level security;
 alter table public.messages enable row level security;
+
+-- Helper function to check membership without recursion (Security Definer bypasses RLS)
+create or replace function public.is_member_of(_room_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.room_members
+    where room_id = _room_id
+    and user_id = auth.uid()
+  );
+end;
+$$ language plpgsql security definer;
 
 -- RLS Policies
 
@@ -51,10 +68,11 @@ create policy "Rooms are viewable by everyone" on public.chat_rooms for select u
 create policy "Users can create rooms" on public.chat_rooms for insert with check (auth.uid() = created_by);
 
 -- Room Members:
--- Members can view other members in their rooms
+-- Members can view other members in their rooms (Uses function to avoid recursion)
 create policy "Members can view room members" on public.room_members for select using (
-  auth.uid() in (select user_id from public.room_members where room_id = room_id)
+  public.is_member_of(room_id)
 );
+
 -- Users can join rooms (insert themselves)
 create policy "Users can join rooms" on public.room_members for insert with check (auth.uid() = user_id);
 
@@ -65,7 +83,7 @@ create policy "Public messages are viewable by everyone" on public.messages for 
 -- Private messages are viewable by room members
 create policy "Private messages are viewable by members" on public.messages for select using (
   room_id is not null and
-  auth.uid() in (select user_id from public.room_members where room_id = messages.room_id)
+  public.is_member_of(room_id)
 );
 
 -- Users can insert messages ONLY IF ROOM IS NOT EXPIRED

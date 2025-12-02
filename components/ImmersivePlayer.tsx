@@ -171,27 +171,7 @@ const ImmersivePlayer: React.FC = () => {
                     </button>
                 </div>
 
-                {/* 5. Bottom Interaction Bar - Only visible if logged in */}
-                {session && (
-                    <div className={`absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/90 to-transparent z-30 flex items-center gap-6 transition-all duration-500 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 md:translate-y-0 md:opacity-100'}`}>
 
-                        <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-brand-primary transition-colors hover:scale-110 transform duration-200">
-                            {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
-                        </button>
-
-                        {/* Progress Bar */}
-                        <div className="flex-1 h-1.5 bg-white/20 rounded-full cursor-pointer group/progress relative overflow-hidden">
-                            <div className="absolute inset-0 bg-brand-primary w-[98%] rounded-full">
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover/progress:opacity-100 transition-opacity shadow-[0_0_10px_rgba(255,255,255,0.5)] scale-0 group-hover/progress:scale-150"></div>
-                            </div>
-                        </div>
-
-                        <div className="text-white text-xs font-bold tracking-widest opacity-80 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                            AO VIVO
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* --- CHAT CONTAINER --- */}
