@@ -66,6 +66,23 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
     const currentMessages = activeTab === 'public' ? messages : groupMessages;
 
+    // --- AUTH STATE ---
+    const [session, setSession] = useState<any>(null);
+
+    useEffect(() => {
+        // Check active session
+        import('../lib/supabase').then(({ supabase }) => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                setSession(session);
+            });
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                setSession(session);
+            });
+            return () => subscription.unsubscribe();
+        });
+    }, []);
+
     return (
         <div className={`bg-[#0F172A] rounded-3xl shadow-2xl border border-white/10 flex flex-col overflow-hidden font-sans ${className}`}>
             {/* Header */}
@@ -104,7 +121,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide relative">
                 {currentMessages.map((msg) => (
                     <div key={msg.id} className={`flex gap-3 ${msg.isMe ? 'flex-row-reverse' : ''} animate-fade-in`}>
                         <img src={msg.avatar} alt={msg.user} className="w-8 h-8 rounded-full object-cover border border-white/10" />
@@ -122,45 +139,54 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
+
+                {/* Blur Overlay for Non-Logged Users (Optional style choice, keeping it clean for now) */}
             </div>
 
-            {/* Floating Reactions (Visual only for now) */}
-            <div className="absolute bottom-20 right-4 flex flex-col gap-2 pointer-events-none">
-                {/* Placeholder for floating animations */}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-4 bg-[#1E293B]/30 border-t border-white/5">
-                <div className="relative">
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Envie uma mensagem..."
-                        className="w-full bg-[#0F172A] text-white placeholder-slate-500 text-sm rounded-full py-3 pl-4 pr-12 border border-white/10 focus:outline-none focus:border-brand-primary/50 transition-all"
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-primary transition-colors">
-                        <Smile size={20} />
-                    </button>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[10px] text-slate-400 font-medium">Chat conectado</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button className="text-slate-400 hover:text-red-500 transition-colors hover:scale-110 transform"><Heart size={20} /></button>
-                        <button className="text-slate-400 hover:text-orange-500 transition-colors hover:scale-110 transform"><Flame size={20} /></button>
-                        <button
-                            onClick={handleSendMessage}
-                            className="w-8 h-8 rounded-full bg-brand-primary text-brand-dark flex items-center justify-center hover:bg-white transition-colors shadow-lg shadow-brand-primary/20"
-                        >
-                            <Send size={16} />
+            {/* Input Area OR Login CTA */}
+            {session ? (
+                <div className="p-4 bg-[#1E293B]/30 border-t border-white/5">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Envie uma mensagem..."
+                            className="w-full bg-[#0F172A] text-white placeholder-slate-500 text-sm rounded-full py-3 pl-4 pr-12 border border-white/10 focus:outline-none focus:border-brand-primary/50 transition-all"
+                        />
+                        <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-primary transition-colors">
+                            <Smile size={20} />
                         </button>
                     </div>
+                    <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-[10px] text-slate-400 font-medium">Chat conectado</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button className="text-slate-400 hover:text-red-500 transition-colors hover:scale-110 transform"><Heart size={20} /></button>
+                            <button className="text-slate-400 hover:text-orange-500 transition-colors hover:scale-110 transform"><Flame size={20} /></button>
+                            <button
+                                onClick={handleSendMessage}
+                                className="w-8 h-8 rounded-full bg-brand-primary text-brand-dark flex items-center justify-center hover:bg-white transition-colors shadow-lg shadow-brand-primary/20"
+                            >
+                                <Send size={16} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="p-6 bg-[#1E293B]/80 backdrop-blur-md border-t border-white/5 flex flex-col items-center justify-center text-center gap-3">
+                    <p className="text-slate-300 text-sm">Faça login para participar do chat e interagir com a galera!</p>
+                    <button
+                        onClick={() => window.location.href = '/auth'}
+                        className="px-6 py-2 bg-brand-primary text-brand-dark font-bold rounded-full text-sm hover:bg-brand-secondary transition-all shadow-lg shadow-brand-primary/20"
+                    >
+                        Entrar no Chat
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
