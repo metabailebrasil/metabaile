@@ -1,8 +1,8 @@
 
-import {
-  Users,
-  Zap,
-  Trophy,
+import { 
+  Users, 
+  Zap, 
+  Trophy, 
   Radio,
   Gamepad2,
   BarChart3,
@@ -15,11 +15,17 @@ import { Plan, Feature, Artist } from './types';
 
 export const APP_NAME = "METABAILE";
 
-export const NAV_ITEMS = [];
+export const NAV_ITEMS = [
+  { label: 'Experiência', href: '#experience' },
+  { label: 'Features', href: '#uniques' },
+  { label: 'Comunidade', href: '#community' },
+  { label: 'Line-up', href: '#artists' },
+  { label: 'Acesso', href: '#plans' },
+];
 
 export const HERO_CONTENT = {
   tagline: "PALCO DA NOVA GERAÇÃO",
-  subTagline: "O maior palco digital do entretenimento brasileiro!\nAo vivo, em qualquer lugar.",
+  subTagline: "O maior palco digital do entretenimento brasileiro! Ao vivo, em qualquer lugar.",
   ctaPrimary: "Entrar na Pista",
   ctaSecondary: "Criar Evento"
 };
@@ -38,6 +44,11 @@ export const SOCIAL_HUB_CONTENT = {
 };
 
 export const FEATURES: Feature[] = [
+  {
+    title: 'Interação Real',
+    description: 'Você não só assiste. Você controla câmeras e escolhe o setlist.',
+    icon: Zap
+  },
   {
     title: 'Watch Party',
     description: 'Áudio espacial e salas privadas. Parece que vocês estão lado a lado.',
@@ -85,53 +96,37 @@ export const GAMIFICATION_PILLARS = [
 ];
 
 export const ARTISTS: Artist[] = [
-  {
-    name: 'Matuê',
-    role: 'Trap / 30PRAUM',
-    image: '/assets/artists/matue.png'
-  },
-  {
-    name: 'MC IG',
-    role: 'Funk / 4M',
-    image: '/assets/artists/mcig.png'
-  },
-  {
-    name: 'Recayd Mob',
-    role: 'Trap / Coletivo',
-    image: '/assets/artists/recaydmob.png'
-  },
-  {
-    name: 'Ajuliacosta',
-    role: 'Rap',
-    image: '/assets/artists/ajuliacosta.jpg'
-  }
+  { name: 'DJ Lumi', role: 'Electronic', image: 'https://images.unsplash.com/photo-1571266028243-37160d7fdd92?w=400&h=500&fit=crop' },
+  { name: 'MC Flow', role: 'Trap / Funk', image: 'https://images.unsplash.com/photo-1517230874863-439977a74349?w=400&h=500&fit=crop' },
+  { name: 'Studio Z', role: 'Visual Art', image: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=400&h=500&fit=crop' },
+  { name: 'Sara B', role: 'Open Format', image: 'https://images.unsplash.com/photo-1520333789090-1afc82db536a?w=400&h=500&fit=crop' },
 ];
 
 export const PLANS: Plan[] = [
   {
-    name: 'Pista',
-    price: 'Gratuito',
-    features: ['Sem cadastro', 'Acesso básico'],
+    name: 'Free',
+    price: 'Visitante',
+    features: ['Acesso ao show', 'Modo Espectador', 'Visualização passiva'],
     color: 'border-slate-100'
   },
   {
     name: 'Fan',
-    price: 'R$ 9,99',
-    features: ['7 dias de acesso', 'Acesso total', 'Chat exclusivo', 'Ranking', 'Emotes'],
+    price: 'Membro',
+    features: ['Chat & Reações', 'Ranking Global', 'XP Padrão'],
     color: 'border-brand-primary',
     highlight: false
   },
   {
-    name: 'Camarote VIP',
-    price: 'R$ 89,90/semestre',
-    features: ['Backstage', 'Sorteios', 'Top Doador', 'Assinatura Semestral'],
+    name: 'VIP',
+    price: 'R$ 29/mês',
+    features: ['Backstage Pass', 'Drops Raros', 'Badge Dourado', 'XP Dobrado'],
     highlight: true,
     color: 'border-brand-secondary'
   },
   {
-    name: 'Celebridade',
-    price: 'Influencer',
-    features: ['Painel de impacto', 'Bônus engajamento', 'Verificado'],
+    name: 'Creator',
+    price: 'Parceiro',
+    features: ['Verificado', 'Ferramentas de Live', 'Monetização'],
     color: 'border-purple-300'
   }
 ];
