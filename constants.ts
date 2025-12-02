@@ -116,14 +116,14 @@ export const PLANS: Plan[] = [
   },
   {
     name: 'Fan',
-    price: 'Assinante',
-    features: ['Acesso total', 'Chat exclusivo', 'Ranking', 'Emotes'],
+    price: 'R$ 9,99',
+    features: ['7 dias de acesso', 'Acesso total', 'Chat exclusivo', 'Ranking', 'Emotes'],
     color: 'border-brand-primary',
     highlight: false
   },
   {
     name: 'Camarote VIP',
-    price: 'R$ 50/mês',
+    price: 'R$ 89,90/semestre',
     features: ['Backstage', 'Sorteios', 'Top Doador', 'Assinatura Semestral'],
     highlight: true,
     color: 'border-brand-secondary'

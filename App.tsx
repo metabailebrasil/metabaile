@@ -1,6 +1,7 @@
 import React, { useState, PropsWithChildren } from 'react';
 import Navbar from './components/Navbar';
 import AnnouncementBar from './components/AnnouncementBar';
+import ConstructionTicker from './components/ConstructionTicker';
 import ImmersivePlayer from './components/ImmersivePlayer';
 import {
    APP_NAME,
@@ -79,8 +80,13 @@ const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
       )}
       <div className="relative z-10">
          <h3 className={`text-2xl font-display font-bold mb-2 text-brand-dark`}>{plan.name}</h3>
-         <div className="flex items-baseline mb-6">
-            <span className={`text-4xl font-bold ${plan.highlight ? 'text-brand-primary' : 'text-brand-dark'}`}>{plan.price}</span>
+         <div className="flex items-baseline mb-6 flex-wrap gap-1">
+            <span className={`text-3xl md:text-4xl font-bold ${plan.highlight ? 'text-brand-primary' : 'text-brand-dark'}`}>{plan.price.split('/')[0]}</span>
+            {plan.price.includes('/') && (
+               <span className={`text-lg font-medium ${plan.highlight ? 'text-brand-primary/80' : 'text-brand-dark/60'}`}>
+                  /{plan.price.split('/')[1]}
+               </span>
+            )}
          </div>
          <ul className="space-y-4 mb-8">
             {plan.features.map((feat, i) => (
@@ -188,6 +194,7 @@ function App() {
          </section>
 
          {/* --- 7. PLANS --- */}
+         <ConstructionTicker />
          <section id="plans" className="py-24 relative overflow-hidden z-10">
             <div className="relative z-10">
                <SectionTitle title="Escolha Seu Acesso" subtitle="De visitante a VIP. Tem espaço para todo mundo." />
