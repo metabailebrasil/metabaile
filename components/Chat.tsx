@@ -301,9 +301,31 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
     const handleJoinRoom = async () => {
         if (!joinRoomId.trim() || !session) return;
-        const { data: room, error } = await supabase.from('chat_rooms').select('*').eq('id', joinRoomId).single();
+
+        let query = supabase.from('chat_rooms').select('*');
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(joinRoomId);
+
+        if (isUUID) {
+            query = query.eq('id', joinRoomId);
+        } else {
+            query = query.ilike('name', joinRoomId); // Case insensitive search
+        }
+
+        const { data: room, error } = await query.single();
+
         if (error || !room) return alert('Sala não encontrada.');
         if (room.password && room.password !== joinRoomPass) return alert('Senha incorreta.');
+
+        // Check if already a member
+        const { data: existingMember } = await supabase.from('room_members').select('*').eq('room_id', room.id).eq('user_id', session.user.id).single();
+        if (existingMember) {
+            setMyRooms(prev => prev.some(r => r.id === room.id) ? prev : [...prev, room]);
+            setActiveRoomId(room.id);
+            setActiveTab('group');
+            setShowJoinModal(false);
+            return;
+        }
+
         const { error: joinError } = await supabase.from('room_members').insert([{ room_id: room.id, user_id: session.user.id }]);
         if (!joinError) {
             setMyRooms([...myRooms, room]); setActiveRoomId(room.id); setActiveTab('group'); setShowJoinModal(false);
@@ -315,8 +337,13 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
             {/* Header */}
             <div className="p-4 bg-[#1E293B]/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between z-10">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-white font-bold text-lg tracking-tight">
+                    <h2 className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
                         {activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}
+                        {activeTab === 'group' && timeLeft && (
+                            <span className="text-xs font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30">
+                                {timeLeft}
+                            </span>
+                        )}
                     </h2>
 
                 </div>
@@ -504,7 +531,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1E293B] p-6 rounded-2xl border border-white/10 w-full max-w-sm shadow-2xl">
                         <h3 className="text-white font-bold text-lg mb-4">Entrar em Sala</h3>
-                        <input type="text" placeholder="ID da Sala" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-brand-primary outline-none" value={joinRoomId} onChange={e => setJoinRoomId(e.target.value)} />
+                        <input type="text" placeholder="Nome ou ID da Sala" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-brand-primary outline-none" value={joinRoomId} onChange={e => setJoinRoomId(e.target.value)} />
                         <input type="password" placeholder="Senha" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-4 focus:border-brand-primary outline-none" value={joinRoomPass} onChange={e => setJoinRoomPass(e.target.value)} />
                         <div className="flex gap-2">
                             <button onClick={() => setShowJoinModal(false)} className="flex-1 py-2 text-slate-400 hover:text-white transition-colors">Cancelar</button>
