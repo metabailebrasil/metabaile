@@ -15,16 +15,11 @@ import { Plan, Feature, Artist } from './types';
 
 export const APP_NAME = "METABAILE";
 
-export const NAV_ITEMS = [
-  { label: 'Experiência', href: '#experience' },
-  { label: 'Comunidade', href: '#community' },
-  { label: 'Line-up', href: '#artists' },
-  { label: 'Acesso', href: '#plans' },
-];
+export const NAV_ITEMS = [];
 
 export const HERO_CONTENT = {
   tagline: "PALCO DA NOVA GERAÇÃO",
-  subTagline: "O maior palco digital do entretenimento brasileiro! Ao vivo, em qualquer lugar.",
+  subTagline: "O maior palco digital do entretenimento brasileiro!\nAo vivo, em qualquer lugar.",
   ctaPrimary: "Entrar na Pista",
   ctaSecondary: "Criar Evento"
 };

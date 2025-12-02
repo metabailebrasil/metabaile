@@ -1,5 +1,6 @@
 import React, { useState, PropsWithChildren } from 'react';
 import Navbar from './components/Navbar';
+import AnnouncementBar from './components/AnnouncementBar';
 import ImmersivePlayer from './components/ImmersivePlayer';
 import {
    APP_NAME,
@@ -69,29 +70,29 @@ const ArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => (
 );
 
 const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
-   <div className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:scale-[1.02] group overflow-hidden ${plan.highlight ? 'bg-white/10 border-brand-primary/50 shadow-[0_0_30px_rgba(167,211,255,0.15)]' : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'}`}>
+   <div className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:scale-[1.02] group ${plan.highlight ? 'bg-white border-brand-primary shadow-[0_10px_40px_rgba(167,211,255,0.4)]' : 'bg-white/60 backdrop-blur-md border-white/40 hover:border-brand-primary/30 hover:shadow-xl'}`}>
       {plan.highlight && (
          <>
-            <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/10 to-transparent opacity-50 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/10 to-transparent opacity-50 pointer-events-none rounded-[2rem]" />
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-brand-dark text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg z-10">Mais Popular</div>
          </>
       )}
       <div className="relative z-10">
-         <h3 className={`text-2xl font-display font-bold mb-2 ${plan.highlight ? 'text-white' : 'text-slate-200'}`}>{plan.name}</h3>
+         <h3 className={`text-2xl font-display font-bold mb-2 text-brand-dark`}>{plan.name}</h3>
          <div className="flex items-baseline mb-6">
-            <span className={`text-4xl font-bold ${plan.highlight ? 'text-brand-primary drop-shadow-[0_0_10px_rgba(167,211,255,0.5)]' : 'text-white'}`}>{plan.price}</span>
+            <span className={`text-4xl font-bold ${plan.highlight ? 'text-brand-primary' : 'text-brand-dark'}`}>{plan.price}</span>
          </div>
          <ul className="space-y-4 mb-8">
             {plan.features.map((feat, i) => (
                <li key={i} className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.highlight ? 'bg-brand-primary text-brand-dark' : 'bg-white/10 text-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.highlight ? 'bg-brand-primary text-brand-dark' : 'bg-brand-light text-brand-secondary'}`}>
                      <Check size={12} strokeWidth={3} />
                   </div>
-                  <span className={`text-sm font-medium ${plan.highlight ? 'text-slate-200' : 'text-slate-400'}`}>{feat}</span>
+                  <span className={`text-sm font-medium ${plan.highlight ? 'text-brand-gray' : 'text-slate-500'}`}>{feat}</span>
                </li>
             ))}
          </ul>
-         <Button variant={plan.highlight ? 'primary' : 'outline-white'} className="w-full">Escolher Plano</Button>
+         <Button variant={plan.highlight ? 'primary' : 'secondary'} className="w-full">Escolher {plan.name}</Button>
       </div>
    </div>
 );
@@ -100,58 +101,55 @@ function App() {
    const scrollToStage = () => document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
 
    return (
-      <div className="min-h-screen font-sans bg-brand-light">
+      <div className="min-h-screen font-sans bg-brand-light selection:bg-brand-primary/30">
+         {/* Global Fixed Background */}
+         <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
+            <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/20 via-brand-light to-brand-light">
+               <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-brand-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
+               <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-brand-secondary/10 rounded-full blur-[120px] animate-float" />
+               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+            </div>
+         </div>
+
+         <AnnouncementBar />
          <Navbar />
 
          {/* --- 1. HERO SECTION (Full Screen - No Buttons) --- */}
-         <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 w-full h-full bg-brand-dark">
-               <img src="https://img.freepik.com/free-photo/view-futuristic-city-with-lighting_23-2151069502.jpg?t=st=1708899000~exp=1708902600~hmac=a1b2c3d4e5f6" alt="Cyberpunk City" className="w-full h-full object-cover opacity-80 mix-blend-screen" style={{ filter: 'hue-rotate(180deg) saturate(1.5) contrast(1.1)' }} />
-               <div className="absolute inset-0 bg-brand-dark/40 mix-blend-multiply" />
-               <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/20 to-brand-primary/10" />
-               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-150 contrast-150 mix-blend-overlay"></div>
-            </div>
-
+         <section className="relative h-screen w-full flex items-center justify-center overflow-hidden z-10">
             <div className="relative z-10 max-w-5xl mx-auto px-4 text-center mt-[-5vh]">
-               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-brand-primary/30 px-4 py-1.5 rounded-full mb-8 animate-float">
+               <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md border border-brand-primary/30 px-4 py-1.5 rounded-full mb-8 animate-float shadow-lg shadow-brand-primary/20">
                   <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#A7D3FF]"></span>
-                  <span className="text-brand-primary text-xs font-bold tracking-widest uppercase">Metaverso • Live • Social</span>
+                  <span className="text-brand-dark text-xs font-bold tracking-widest uppercase">METAVERSO • FUNK • TRAP</span>
                </div>
 
-               <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-none tracking-tighter mb-6 text-white drop-shadow-[0_0_30px_rgba(167,211,255,0.3)] uppercase">
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-white to-brand-primary animate-pulse-slow">
+               <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-none tracking-tighter mb-6 text-brand-dark drop-shadow-sm uppercase">
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-dark to-brand-primary animate-pulse-slow bg-[length:200%_auto]">
                      {HERO_CONTENT.tagline}
                   </span>
                </h1>
 
-               <p className="text-lg md:text-2xl text-blue-100/90 mb-10 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
+               <p className="text-lg md:text-2xl text-brand-gray mb-10 max-w-3xl mx-auto font-light leading-relaxed whitespace-pre-line">
                   {HERO_CONTENT.subTagline}
                </p>
-
-               {/* Buttons Removed as requested */}
             </div>
 
-            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white/50 flex flex-col items-center gap-2 animate-bounce cursor-pointer" onClick={scrollToStage}>
-               <span className="text-xs uppercase tracking-widest font-bold">Scroll to Party</span>
-               <ChevronDown size={24} />
-            </div>
+            {/* Scroll indicator removed */}
          </section>
 
          {/* --- 2. STAGE SECTION (The Player) --- */}
-         <section id="stage" className="relative w-full py-16 bg-brand-dark flex flex-col items-center justify-center">
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-dark to-transparent z-10 pointer-events-none" />
+         <section id="stage" className="relative w-full py-16 flex flex-col items-center justify-center overflow-hidden z-10">
             <div className="relative z-20 w-full flex flex-col items-center">
-               <div className="mb-8 flex items-center gap-3">
+               <div className="mb-8 flex items-center gap-3 bg-white/50 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/20 shadow-sm">
                   <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_red]"></span>
-                  <h2 className="text-white font-display font-bold tracking-widest text-sm uppercase">Ao Vivo Agora: Palco Principal</h2>
+                  <h2 className="text-brand-dark font-display font-bold tracking-widest text-sm uppercase">Ao Vivo Agora: Palco Principal</h2>
                </div>
                <ImmersivePlayer />
             </div>
          </section>
 
          {/* --- 3. SOCIAL HUB (Community) --- */}
-         <section id="community" className="py-24 relative overflow-hidden bg-white">
-            <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
+         <section id="community" className="py-24 relative overflow-hidden z-10">
+            <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center relative z-10">
                <div className="relative order-2 md:order-1">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {FEATURES.map((feature, idx) => (
@@ -175,48 +173,24 @@ function App() {
                         <div className="w-12 h-12 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-brand-dark transition-colors"><Video size={24} /></div>
                         <div><h4 className="text-xl font-bold font-display text-brand-dark mb-1">{SOCIAL_HUB_CONTENT.squadFeature.title}</h4><p className="text-brand-gray">{SOCIAL_HUB_CONTENT.squadFeature.description}</p></div>
                      </div>
-                     <div className="pt-6 flex gap-8 border-t border-slate-100">
-                        {COMMUNITY_STATS.map((stat, idx) => (<div key={idx}><p className="text-3xl font-bold font-display text-brand-dark">{stat.value}</p><p className="text-sm font-medium text-slate-400 uppercase tracking-wide flex items-center gap-1"><stat.icon size={12} /> {stat.label}</p></div>))}
-                     </div>
+                     {/* Stats removed as requested */}
                   </div>
                </div>
             </div>
          </section>
 
-         {/* --- 5. GAMIFICATION --- */}
-         <section id="gamification" className="py-24 bg-brand-dark text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-brand-primary/5 blur-[100px] rounded-full pointer-events-none" />
-            <div className="max-w-7xl mx-auto px-4 relative z-10">
-               <SectionTitle dark title="Jogue Enquanto Curte" subtitle="O primeiro festival onde sua participação vale recompensas reais." />
-               <div className="grid md:grid-cols-3 gap-8 mt-16">
-                  {GAMIFICATION_PILLARS.map((pillar, idx) => (
-                     <div key={idx} className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-3xl hover:bg-white/10 transition-colors text-center group">
-                        <div className="w-16 h-16 mx-auto bg-gradient-brand rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(167,211,255,0.3)] group-hover:scale-110 transition-transform"><pillar.icon size={32} className="text-brand-dark" /></div>
-                        <h3 className="text-2xl font-bold font-display mb-3">{pillar.title}</h3>
-                        <p className="text-slate-300 leading-relaxed">{pillar.description}</p>
-                     </div>
-                  ))}
-               </div>
-               <div className="mt-16 text-center"><Button variant="primary" className="mx-auto">Ver Recompensas Disponíveis</Button></div>
-            </div>
-         </section>
-
          {/* --- 6. ARTISTS / LINEUP --- */}
-         <section id="artists" className="py-24 bg-white">
+         <section id="artists" className="py-24 relative overflow-hidden z-10">
             <SectionTitle title="Quem Comanda o Som" subtitle="Os maiores nomes da música e da arte digital." />
             <div className="max-w-7xl mx-auto px-4">
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">{ARTISTS.map((artist, idx) => (<ArtistCard key={idx} artist={artist} />))}</div>
-               <div className="mt-12 text-center"><Button variant="secondary" className="mx-auto">Ver Line-up Completo</Button></div>
             </div>
          </section>
 
          {/* --- 7. PLANS --- */}
-         <section id="plans" className="py-24 bg-brand-dark relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
-
+         <section id="plans" className="py-24 relative overflow-hidden z-10">
             <div className="relative z-10">
-               <SectionTitle dark title="Escolha Seu Acesso" subtitle="De visitante a VIP. Tem espaço para todo mundo." />
+               <SectionTitle title="Escolha Seu Acesso" subtitle="De visitante a VIP. Tem espaço para todo mundo." />
                <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-6">
                   {PLANS.map((plan, idx) => (<PlanCard key={idx} plan={plan} />))}
                </div>
@@ -224,21 +198,17 @@ function App() {
          </section>
 
          {/* --- 8. EDITORIAL POSTER FOOTER --- */}
-         <footer className="bg-brand-primary text-brand-dark py-20 relative overflow-hidden">
+         <footer className="bg-brand-primary text-brand-dark py-20 relative overflow-hidden z-20">
             <div className="max-w-[1920px] mx-auto px-6 md:px-12 relative z-10">
                <div className="w-full border-b-4 border-brand-dark pb-2 mb-12">
                   <h1 className="text-[12vw] leading-[0.85] font-display font-black tracking-tighter uppercase text-center md:text-left">{APP_NAME}</h1>
                </div>
                <div className="grid md:grid-cols-12 gap-12 items-start">
                   <div className="md:col-span-5 space-y-6">
-                     <p className="text-xl md:text-2xl font-medium leading-snug max-w-xl">Nossa missão é simples: transformar o streaming passivo em uma experiência coletiva e memorável. O palco agora é de todos.</p>
+                     <p className="text-xl md:text-2xl font-medium leading-snug max-w-xl">Nossa missão é simples: Democratizamos grandes shows e eventos exclusivos com uma experiência imersiva. O palco agora é de todos.</p>
                      <p className="text-sm font-bold uppercase tracking-wider opacity-60">© 2025 {APP_NAME} Experience</p>
                   </div>
-                  <div className="md:col-span-7 flex flex-col md:flex-row justify-between gap-12">
-                     <div className="flex flex-col gap-4">
-                        <h4 className="font-bold text-xl uppercase tracking-wider mb-2">Plataforma</h4>
-                        {FOOTER_LINKS.map((link, i) => (<a key={i} href={link.href} className="text-lg font-medium hover:underline decoration-2 underline-offset-4">{link.label}</a>))}
-                     </div>
+                  <div className="md:col-span-7 flex flex-col md:flex-row justify-end gap-16">
                      <div className="flex flex-col gap-4">
                         <h4 className="font-bold text-xl uppercase tracking-wider mb-2">Social</h4>
                         <div className="flex gap-4">
