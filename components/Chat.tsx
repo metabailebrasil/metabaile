@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown } from 'lucide-react';
+import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -73,10 +73,18 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     const [newRoomPass, setNewRoomPass] = useState('');
     const [joinRoomId, setJoinRoomId] = useState('');
     const [joinRoomPass, setJoinRoomPass] = useState('');
+    const [isCopied, setIsCopied] = useState(false);
 
     // Refs
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const handleCopyRoomId = () => {
+        if (!activeRoomId) return;
+        navigator.clipboard.writeText(activeRoomId);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
 
     // --- SCROLL LOGIC ---
     const scrollToBottom = (smooth = true) => {
@@ -155,7 +163,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
             .eq('user_id', userId);
 
         if (data) {
-            const rooms = data.map((item: any) => item.chat_rooms);
+            const rooms = data.map((item: any) => item.chat_rooms).filter((r: any) => r !== null);
             setMyRooms(rooms);
             if (rooms.length > 0) setActiveRoomId(rooms[0].id);
         }
@@ -336,16 +344,31 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         <div className={cn("bg-[#0F172A] rounded-3xl shadow-2xl border border-white/10 flex flex-col overflow-hidden font-sans h-full", className)}>
             {/* Header */}
             <div className="p-4 bg-[#1E293B]/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between z-10">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
-                        {activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}
+                <div className="flex flex-col gap-1 min-w-0 flex-1 mr-4">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-white font-bold text-lg tracking-tight truncate" title={activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}>
+                            {activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}
+                        </h2>
                         {activeTab === 'group' && timeLeft && (
-                            <span className="text-xs font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30">
+                            <span className="flex-shrink-0 text-xs font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 whitespace-nowrap">
                                 {timeLeft}
                             </span>
                         )}
-                    </h2>
-
+                    </div>
+                    {activeTab === 'group' && activeRoomId && (
+                        <div className="flex">
+                            <button
+                                onClick={handleCopyRoomId}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition-all group whitespace-nowrap"
+                                title="Copiar ID da Sala"
+                            >
+                                {isCopied ? <Check size={12} className="text-green-400" /> : <Copy size={12} className="text-slate-400 group-hover:text-white" />}
+                                <span className={cn("text-[10px] font-medium transition-colors", isCopied ? "text-green-400" : "text-slate-400 group-hover:text-white")}>
+                                    {isCopied ? 'Copiado!' : 'Copiar ID'}
+                                </span>
+                            </button>
+                        </div>
+                    )}
                 </div>
                 {/* Tabs */}
                 <div className="flex bg-black/20 rounded-lg p-1 gap-1">
