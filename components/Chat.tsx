@@ -521,13 +521,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                             </button>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between mt-2 px-2">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-[10px] text-slate-400 font-medium tracking-wide">Conectado</span>
-                        </div>
-                        <span className="text-[10px] text-slate-600">Slow Mode: 3s</span>
-                    </div>
+
                 </div>
             ) : (
                 <div className="p-6 bg-slate-900/60 backdrop-blur-md border-t border-sky-500/10 flex flex-col items-center justify-center text-center gap-3">
