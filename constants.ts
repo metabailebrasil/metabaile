@@ -15,7 +15,7 @@ import { Plan, Feature, Artist } from './types';
 
 export const APP_NAME = "METABAILE";
 
-export const LIVE_STREAM_VIDEO_ID = "k1yph1wA1yM"; // User provided Trap/Rap Mix
+export const LIVE_STREAM_VIDEO_ID = "w2t5PdoNMnw"; // User provided Trap/Rap Mix
 
 export const NAV_ITEMS = [];
 
