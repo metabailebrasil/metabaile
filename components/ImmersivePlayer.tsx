@@ -28,7 +28,44 @@ const ImmersivePlayer: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
+    // --- VIDEO STATE ---
+    const [videoId, setVideoId] = useState(LIVE_STREAM_VIDEO_ID);
+
     useEffect(() => {
+        // 1. Fetch initial video ID from DB
+        const fetchStreamConfig = async () => {
+            const { data, error } = await supabase
+                .from('stream_config')
+                .select('video_id')
+                .single();
+
+            if (data?.video_id) {
+                setVideoId(data.video_id);
+            }
+        };
+
+        fetchStreamConfig();
+
+        // 2. Subscribe to Realtime Updates
+        const channel = supabase
+            .channel('stream_config_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'stream_config',
+                },
+                (payload) => {
+                    if (payload.new && payload.new.video_id) {
+                        console.log('New Stream ID received:', payload.new.video_id);
+                        setVideoId(payload.new.video_id);
+                    }
+                }
+            )
+            .subscribe();
+
+        // --- AUTH STATE ---
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -43,7 +80,10 @@ const ImmersivePlayer: React.FC = () => {
             setLoading(false);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const handleLogout = async () => {
@@ -141,7 +181,7 @@ const ImmersivePlayer: React.FC = () => {
                             ref={iframeRef}
                             width="100%"
                             height="100%"
-                            src={`https://www.youtube.com/embed/${LIVE_STREAM_VIDEO_ID}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`}
+                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`}
                             title="Metabaile Live"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
