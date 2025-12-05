@@ -97,13 +97,18 @@
       background: transparent;
     }
 
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-
     ::-webkit-scrollbar-thumb:hover {
       background: #A7D3FF;
+    }
+
+    /* Hide Scrollbar Utility */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>

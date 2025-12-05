@@ -13,7 +13,7 @@ alter table profiles enable row level security;
 
 create policy "Public profiles are viewable by everyone."
   on profiles for select
-  using ( true );
+  using ( auth.role() = 'authenticated' );
 
 create policy "Users can insert their own profile."
   on profiles for insert

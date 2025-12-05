@@ -416,7 +416,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
             {/* Messages Area */}
             <div
-                className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide relative z-10"
+                className="flex-1 overflow-y-auto py-2 space-y-0.5 scrollbar-hide overflow-x-hidden relative z-10"
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
             >
@@ -441,53 +441,33 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                             {messages.map((msg) => (
                                 <motion.div
                                     key={msg.id}
-                                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                                    transition={{ duration: 0.3, ease: "easeOut" }}
-                                    className={cn("flex gap-3 group", msg.isMe && "flex-row-reverse")}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="group px-2 py-0.5 hover:bg-white/5 transition-colors text-[13px] leading-5 break-words"
                                 >
-                                    {/* Avatar */}
-                                    <div className="flex-shrink-0 self-end mb-1">
-                                        <img
-                                            src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`}
-                                            alt="Avatar"
-                                            className="w-8 h-8 rounded-full object-cover border border-white/10 ring-2 ring-transparent group-hover:ring-sky-500/30 transition-all"
-                                        />
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className={cn("flex flex-col max-w-[85%]", msg.isMe ? "items-end" : "items-start")}>
-                                        <div className="flex items-baseline gap-2 mb-1 px-1">
-                                            {/* Badges */}
-                                            {msg.role_badge === 'admin' && <Shield size={12} className="text-red-500" />}
-                                            {msg.role_badge === 'vip' && <Star size={12} className="text-yellow-500" />}
-
-                                            {/* Username */}
-                                            {!msg.isMe && (
-                                                <span className={cn("text-xs font-bold tracking-wide", getUsernameColor(msg.user_meta?.name || 'User'))}>
-                                                    {msg.user_meta?.name || 'Usuário'}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Message Bubble */}
-                                        <div className={cn(
-                                            "px-4 py-2.5 shadow-sm relative",
-                                            msg.isMe
-                                                ? "bg-sky-500 text-white rounded-2xl rounded-tr-sm shadow-sky-500/10"
-                                                : "bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-2xl rounded-tl-sm border border-white/5"
-                                        )}>
-                                            <p className="text-[15px] leading-relaxed font-medium">
-                                                {msg.content}
-                                            </p>
-                                        </div>
-
-                                        {/* Timestamp */}
-                                        <span className="text-[10px] text-slate-500 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="inline-flex items-center gap-1 mr-1 align-baseline opacity-50 group-hover:opacity-100 transition-opacity select-none">
+                                        <span className="text-[10px] text-slate-500 font-mono">
                                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
-                                    </div>
+                                    </span>
+
+                                    {/* Badges */}
+                                    <span className="inline-flex items-center gap-0.5 mr-1 align-middle">
+                                        {msg.role_badge === 'admin' && <Shield size={12} className="text-red-500" />}
+                                        {msg.role_badge === 'vip' && <Star size={12} className="text-yellow-500" />}
+                                    </span>
+
+                                    {/* Username */}
+                                    <span className={cn("font-bold hover:underline cursor-pointer", getUsernameColor(msg.user_meta?.name || 'User'))}>
+                                        {msg.user_meta?.name || 'Usuário'}
+                                    </span>
+
+                                    <span className="text-slate-500 mr-1.5">:</span>
+
+                                    {/* Message Content */}
+                                    <span className={cn("text-slate-200", msg.isMe && "font-medium text-white")}>
+                                        {msg.content}
+                                    </span>
                                 </motion.div>
                             ))}
                         </AnimatePresence>

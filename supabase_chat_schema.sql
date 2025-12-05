@@ -67,6 +67,9 @@ create policy "Rooms are viewable by everyone" on public.chat_rooms for select u
 -- Authenticated users can create rooms
 create policy "Users can create rooms" on public.chat_rooms for insert with check (auth.uid() = created_by);
 
+-- Users can delete their own rooms
+create policy "Users can delete own rooms" on public.chat_rooms for delete using (auth.uid() = created_by);
+
 -- Room Members:
 -- Members can view other members in their rooms (Uses function to avoid recursion)
 create policy "Members can view room members" on public.room_members for select using (
@@ -75,6 +78,9 @@ create policy "Members can view room members" on public.room_members for select 
 
 -- Users can join rooms (insert themselves)
 create policy "Users can join rooms" on public.room_members for insert with check (auth.uid() = user_id);
+
+-- Users can leave rooms (delete their membership)
+create policy "Users can leave rooms" on public.room_members for delete using (auth.uid() = user_id);
 
 -- Messages:
 -- Public messages (room_id is NULL) are viewable by everyone
@@ -97,3 +103,6 @@ create policy "Users can insert messages" on public.messages for insert with che
     )
   )
 );
+
+-- Users can delete their own messages
+create policy "Users can delete own messages" on public.messages for delete using (auth.uid() = user_id);
