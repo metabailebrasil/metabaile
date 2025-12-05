@@ -113,13 +113,13 @@ export const PLANS: Plan[] = [
   {
     name: 'Pista',
     price: 'Gratuito',
-    features: ['Sem cadastro', 'Acesso básico'],
+    features: ['Cadastro básico', 'Acesso básico'],
     color: 'border-slate-100'
   },
   {
     name: 'Fan',
     price: 'R$ 9,99',
-    features: ['7 dias de acesso', 'Acesso total', 'Chat exclusivo', 'Ranking', 'Emotes'],
+    features: ['7 dias de acesso', 'Acesso aos próximos shows', 'Chat exclusivo', 'Ranking', 'Emotes'],
     color: 'border-brand-primary',
     highlight: false
   },

@@ -1,4 +1,5 @@
 import React, { useState, PropsWithChildren } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AnnouncementBar from '../components/AnnouncementBar';
 import ConstructionTicker from '../components/ConstructionTicker';
@@ -105,12 +106,15 @@ const PlanCard: React.FC<{ plan: Plan; onSelect: (plan: Plan) => void }> = ({ pl
 );
 
 function Home() {
+    const navigate = useNavigate();
     const [showInfluencerModal, setShowInfluencerModal] = useState(false);
     const scrollToStage = () => document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
 
     const handlePlanSelect = (plan: Plan) => {
         if (plan.name === 'Celebridade') {
             setShowInfluencerModal(true);
+        } else if (plan.name === 'Pista') {
+            navigate('/auth');
         } else {
             // Default action (e.g., scroll to register or generic alert for now)
             alert(`Você escolheu o plano ${plan.name}. Em breve redirecionaremos para o pagamento.`);
