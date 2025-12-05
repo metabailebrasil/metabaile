@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check } from 'lucide-react';
+import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -340,13 +340,20 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         } else alert('Erro ao entrar.');
     };
 
+    const handleDonate = () => {
+        alert('Funcionalidade de doação em breve!');
+    };
+
     return (
-        <div className={cn("bg-[#0F172A] rounded-3xl shadow-2xl border border-white/10 flex flex-col overflow-hidden font-sans h-full", className)}>
+        <div className={cn("bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-500/20 flex flex-col overflow-hidden font-sans h-full", className)}>
+            {/* Ambient Glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-sky-500/10 via-transparent to-transparent pointer-events-none"></div>
+
             {/* Header */}
-            <div className="p-4 bg-[#1E293B]/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between z-10">
+            <div className="p-4 bg-transparent border-b border-white/5 flex items-center justify-between z-10 relative">
                 <div className="flex flex-col gap-1 min-w-0 flex-1 mr-4">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-white font-bold text-lg tracking-tight truncate" title={activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}>
+                        <h2 className="text-white font-bold text-lg tracking-tight truncate drop-shadow-sm" title={activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}>
                             {activeTab === 'public' ? 'Chat da Galera' : (myRooms.find(r => r.id === activeRoomId)?.name || 'Minha Resenha')}
                         </h2>
                         {activeTab === 'group' && timeLeft && (
@@ -371,17 +378,17 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                     )}
                 </div>
                 {/* Tabs */}
-                <div className="flex bg-black/20 rounded-lg p-1 gap-1">
+                <div className="flex bg-black/40 rounded-lg p-1 gap-1 border border-white/5">
                     <button
                         onClick={() => setActiveTab('public')}
-                        className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'public' ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
+                        className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'public' ? "bg-sky-500/20 text-sky-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
                     >
                         <MessageSquare size={16} />
                         <span className="hidden md:inline">Geral</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('group')}
-                        className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'group' ? "bg-brand-primary/20 text-brand-primary" : "text-slate-500 hover:text-slate-300")}
+                        className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'group' ? "bg-sky-500/20 text-sky-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
                     >
                         <Users size={16} />
                         <span className="hidden md:inline">{myRooms.length > 0 ? 'Minha Resenha' : 'Criar Sala'}</span>
@@ -391,16 +398,16 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
             {/* Sub-Header for Groups */}
             {activeTab === 'group' && (
-                <div className="p-2 bg-[#0F172A] border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide">
-                    <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-brand-primary/20 text-brand-primary border border-brand-primary/30 flex items-center gap-1 hover:bg-brand-primary hover:text-black transition-all text-xs font-bold">
+                <div className="p-2 bg-black/20 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide z-10 relative">
+                    <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1 hover:bg-sky-500 hover:text-white transition-all text-xs font-bold">
                         <Plus size={14} /> Nova Sala
                     </button>
-                    <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/10 flex items-center gap-1 hover:bg-white/10 hover:text-white transition-all text-xs font-bold">
+                    <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800/50 text-slate-400 border border-white/10 flex items-center gap-1 hover:bg-white/10 hover:text-white transition-all text-xs font-bold">
                         <Hash size={14} /> Entrar
                     </button>
                     <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
                     {myRooms.map(room => (
-                        <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={cn("px-3 py-1 rounded-full text-xs font-bold border transition-all whitespace-nowrap", activeRoomId === room.id ? 'bg-brand-primary text-black border-brand-primary' : 'bg-slate-800 text-slate-400 border-white/10 hover:border-white/30')}>
+                        <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={cn("px-3 py-1 rounded-full text-xs font-bold border transition-all whitespace-nowrap", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10 hover:border-white/30')}>
                             {room.emoji} {room.name}
                         </button>
                     ))}
@@ -409,20 +416,20 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
             {/* Messages Area */}
             <div
-                className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide relative"
+                className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide relative z-10"
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
             >
                 {activeTab === 'group' && myRooms.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80 animate-fade-in">
-                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                            <Users size={32} className="text-brand-primary" />
+                        <div className="w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center mb-4 border border-sky-500/20">
+                            <Users size={32} className="text-sky-400" />
                         </div>
                         <h3 className="text-white font-bold text-lg mb-2">Crie sua Resenha Privada</h3>
                         <p className="text-slate-400 text-sm mb-6 max-w-[200px]">Junte seus amigos em uma sala exclusiva para comentar o show!</p>
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="px-6 py-3 bg-brand-primary text-black font-bold rounded-full hover:scale-105 transition-transform shadow-lg shadow-brand-primary/20 flex items-center gap-2"
+                            className="px-6 py-3 bg-sky-500 text-white font-bold rounded-full hover:scale-105 transition-transform shadow-lg shadow-sky-500/20 flex items-center gap-2"
                         >
                             <Plus size={18} />
                             Criar Sala Agora
@@ -441,36 +448,45 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                     className={cn("flex gap-3 group", msg.isMe && "flex-row-reverse")}
                                 >
                                     {/* Avatar */}
-                                    <div className="flex-shrink-0">
+                                    <div className="flex-shrink-0 self-end mb-1">
                                         <img
                                             src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`}
                                             alt="Avatar"
-                                            className="w-8 h-8 rounded-full object-cover border border-white/10 ring-2 ring-transparent group-hover:ring-white/10 transition-all"
+                                            className="w-8 h-8 rounded-full object-cover border border-white/10 ring-2 ring-transparent group-hover:ring-sky-500/30 transition-all"
                                         />
                                     </div>
 
                                     {/* Content */}
                                     <div className={cn("flex flex-col max-w-[85%]", msg.isMe ? "items-end" : "items-start")}>
-                                        <div className="flex items-baseline gap-2 mb-0.5">
+                                        <div className="flex items-baseline gap-2 mb-1 px-1">
                                             {/* Badges */}
                                             {msg.role_badge === 'admin' && <Shield size={12} className="text-red-500" />}
                                             {msg.role_badge === 'vip' && <Star size={12} className="text-yellow-500" />}
 
                                             {/* Username */}
-                                            <span className={cn("text-sm font-bold tracking-wide", msg.isMe ? "text-white" : getUsernameColor(msg.user_meta?.name || 'User'))}>
-                                                {msg.user_meta?.name || 'Usuário'}
-                                            </span>
-
-                                            {/* Timestamp */}
-                                            <span className="text-[10px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                            {!msg.isMe && (
+                                                <span className={cn("text-xs font-bold tracking-wide", getUsernameColor(msg.user_meta?.name || 'User'))}>
+                                                    {msg.user_meta?.name || 'Usuário'}
+                                                </span>
+                                            )}
                                         </div>
 
-                                        {/* Message Bubble / Text */}
-                                        <p className={cn("text-[15px] leading-relaxed font-medium", msg.isMe ? "text-slate-200 text-right" : "text-slate-300")}>
-                                            {msg.content}
-                                        </p>
+                                        {/* Message Bubble */}
+                                        <div className={cn(
+                                            "px-4 py-2.5 shadow-sm relative",
+                                            msg.isMe
+                                                ? "bg-sky-500 text-white rounded-2xl rounded-tr-sm shadow-sky-500/10"
+                                                : "bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-2xl rounded-tl-sm border border-white/5"
+                                        )}>
+                                            <p className="text-[15px] leading-relaxed font-medium">
+                                                {msg.content}
+                                            </p>
+                                        </div>
+
+                                        {/* Timestamp */}
+                                        <span className="text-[10px] text-slate-500 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
                                 </motion.div>
                             ))}
@@ -485,7 +501,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 10 }}
                                     onClick={() => scrollToBottom(true)}
-                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-primary text-brand-dark px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 hover:scale-105 transition-transform z-20"
+                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg shadow-sky-500/20 flex items-center gap-2 hover:scale-105 transition-transform z-20"
                                 >
                                     <ArrowDown size={14} />
                                     Mais mensagens recentes
@@ -498,7 +514,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
             {/* Input Area */}
             {session ? (
-                <div className="p-4 bg-[#1E293B]/30 border-t border-white/5 backdrop-blur-sm">
+                <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm">
                     <div className="relative group">
                         <input
                             type="text"
@@ -506,15 +522,24 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={activeTab === 'public' ? "Comente na live..." : "Mensagem privada..."}
-                            className="w-full bg-[#0F172A] text-white placeholder-slate-500 text-sm rounded-full py-3.5 pl-5 pr-12 border border-white/10 focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all shadow-inner"
+                            className="w-full bg-slate-950/50 text-white placeholder-slate-500 text-sm rounded-full py-3.5 pl-5 pr-24 border border-sky-500/20 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/50 transition-all shadow-inner"
                         />
-                        <button
-                            onClick={handleSendMessage}
-                            disabled={!inputValue.trim()}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-brand-primary text-brand-dark flex items-center justify-center hover:bg-white transition-all shadow-lg shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
-                        >
-                            <Send size={18} className={inputValue.trim() ? "translate-x-0.5" : ""} />
-                        </button>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            <button
+                                onClick={handleDonate}
+                                className="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 transform active:scale-95"
+                                title="Fazer uma doação"
+                            >
+                                <Banknote size={18} />
+                            </button>
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={!inputValue.trim()}
+                                className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+                            >
+                                <Send size={18} className={inputValue.trim() ? "translate-x-0.5" : ""} />
+                            </button>
+                        </div>
                     </div>
                     <div className="flex items-center justify-between mt-2 px-2">
                         <div className="flex items-center gap-1.5">
@@ -525,40 +550,42 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                     </div>
                 </div>
             ) : (
-                <div className="p-6 bg-[#1E293B]/80 backdrop-blur-md border-t border-white/5 flex flex-col items-center justify-center text-center gap-3">
+                <div className="p-6 bg-slate-900/60 backdrop-blur-md border-t border-sky-500/10 flex flex-col items-center justify-center text-center gap-3">
                     <p className="text-slate-300 text-sm font-medium">Faça login para participar da resenha!</p>
                     <button
                         onClick={() => window.location.href = '/auth'}
-                        className="px-6 py-2.5 bg-brand-primary text-brand-dark font-bold rounded-full text-sm hover:bg-brand-secondary transition-all shadow-lg shadow-brand-primary/20 hover:scale-105"
+                        className="px-6 py-2.5 bg-sky-500 text-white font-bold rounded-full text-sm hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 hover:scale-105"
                     >
                         Entrar no Chat
                     </button>
                 </div>
             )}
 
-            {/* Modals (Create/Join) - Kept simple */}
+            {/* Modals (Create/Join) */}
             {showCreateModal && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#1E293B] p-6 rounded-2xl border border-white/10 w-full max-w-sm shadow-2xl">
-                        <h3 className="text-white font-bold text-lg mb-4">Criar Sala Privada</h3>
-                        <input type="text" placeholder="Nome da Sala" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-brand-primary outline-none" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} />
-                        <input type="password" placeholder="Senha (Opcional)" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-4 focus:border-brand-primary outline-none" value={newRoomPass} onChange={e => setNewRoomPass(e.target.value)} />
-                        <div className="flex gap-2">
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-sky-500/20 w-full max-w-sm shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-sky-500/5 pointer-events-none"></div>
+                        <h3 className="text-white font-bold text-lg mb-4 relative z-10">Criar Sala Privada</h3>
+                        <input type="text" placeholder="Nome da Sala" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-sky-500 outline-none relative z-10" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} />
+                        <input type="password" placeholder="Senha (Opcional)" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-4 focus:border-sky-500 outline-none relative z-10" value={newRoomPass} onChange={e => setNewRoomPass(e.target.value)} />
+                        <div className="flex gap-2 relative z-10">
                             <button onClick={() => setShowCreateModal(false)} className="flex-1 py-2 text-slate-400 hover:text-white transition-colors">Cancelar</button>
-                            <button onClick={handleCreateRoom} className="flex-1 py-2 bg-brand-primary text-black font-bold rounded-xl hover:bg-brand-secondary transition-colors">Criar</button>
+                            <button onClick={handleCreateRoom} className="flex-1 py-2 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/20">Criar</button>
                         </div>
                     </div>
                 </div>
             )}
             {showJoinModal && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#1E293B] p-6 rounded-2xl border border-white/10 w-full max-w-sm shadow-2xl">
-                        <h3 className="text-white font-bold text-lg mb-4">Entrar em Sala</h3>
-                        <input type="text" placeholder="Nome ou ID da Sala" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-brand-primary outline-none" value={joinRoomId} onChange={e => setJoinRoomId(e.target.value)} />
-                        <input type="password" placeholder="Senha" className="w-full bg-[#0F172A] text-white p-3 rounded-xl border border-white/10 mb-4 focus:border-brand-primary outline-none" value={joinRoomPass} onChange={e => setJoinRoomPass(e.target.value)} />
-                        <div className="flex gap-2">
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-sky-500/20 w-full max-w-sm shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-sky-500/5 pointer-events-none"></div>
+                        <h3 className="text-white font-bold text-lg mb-4 relative z-10">Entrar em Sala</h3>
+                        <input type="text" placeholder="Nome ou ID da Sala" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-3 focus:border-sky-500 outline-none relative z-10" value={joinRoomId} onChange={e => setJoinRoomId(e.target.value)} />
+                        <input type="password" placeholder="Senha" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-4 focus:border-sky-500 outline-none relative z-10" value={joinRoomPass} onChange={e => setJoinRoomPass(e.target.value)} />
+                        <div className="flex gap-2 relative z-10">
                             <button onClick={() => setShowJoinModal(false)} className="flex-1 py-2 text-slate-400 hover:text-white transition-colors">Cancelar</button>
-                            <button onClick={handleJoinRoom} className="flex-1 py-2 bg-brand-primary text-black font-bold rounded-xl hover:bg-brand-secondary transition-colors">Entrar</button>
+                            <button onClick={handleJoinRoom} className="flex-1 py-2 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/20">Entrar</button>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Maximize2,
-    Heart,
+    Volume2,
+    VolumeX,
     Play,
     Pause,
     Lock,
@@ -11,15 +12,21 @@ import {
 import Chat from './Chat';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { LIVE_STREAM_VIDEO_ID } from '../constants';
 
 const ImmersivePlayer: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
+    const [volume, setVolume] = useState(0); // Start at 0 since it's muted
     const [isPlaying, setIsPlaying] = useState(true);
 
     // --- AUTH STATE ---
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Refs
+    const containerRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         // Check active session
@@ -39,14 +46,9 @@ const ImmersivePlayer: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-
-
     const handleLogout = async () => {
         await supabase.auth.signOut();
     };
-
-    // Reference for the container to go full screen
-    const containerRef = useRef<HTMLDivElement>(null);
 
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
@@ -58,8 +60,61 @@ const ImmersivePlayer: React.FC = () => {
         }
     };
 
-    // Placeholder Video ID (Replace with actual Unlisted Live ID)
-    const VIDEO_ID = "jfKfPfyJRdk"; // Lofi Girl as placeholder
+    const toggleMute = () => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            const newMutedState = !isMuted;
+            const command = newMutedState ? 'mute' : 'unMute';
+
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: command,
+                args: []
+            }), '*');
+
+            setIsMuted(newMutedState);
+
+            // If unmuting and volume is 0, set to 50
+            if (!newMutedState && volume === 0) {
+                setVolume(50);
+                iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'setVolume',
+                    args: [50]
+                }), '*');
+            }
+        }
+    };
+
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newVolume = parseInt(e.target.value);
+        setVolume(newVolume);
+
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            // Update volume
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'setVolume',
+                args: [newVolume]
+            }), '*');
+
+            // Handle mute/unmute based on volume level
+            if (newVolume === 0 && !isMuted) {
+                setIsMuted(true);
+                iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'mute',
+                    args: []
+                }), '*');
+            } else if (newVolume > 0 && isMuted) {
+                setIsMuted(false);
+                iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'unMute',
+                    args: []
+                }), '*');
+            }
+        }
+    };
 
     return (
         <div className="w-[95%] md:w-[98%] max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-6 h-auto lg:h-[85vh]">
@@ -83,9 +138,10 @@ const ImmersivePlayer: React.FC = () => {
                 ) : session ? (
                     <div className="absolute inset-0 w-full h-full bg-black">
                         <iframe
+                            ref={iframeRef}
                             width="100%"
                             height="100%"
-                            src={`https://www.youtube.com/embed/${VIDEO_ID}?modestbranding=1&rel=0&showinfo=0&autoplay=1&controls=0`}
+                            src={`https://www.youtube.com/embed/${LIVE_STREAM_VIDEO_ID}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`}
                             title="Metabaile Live"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -127,6 +183,9 @@ const ImmersivePlayer: React.FC = () => {
                                     <User size={20} />
                                     Entrar / Cadastrar
                                 </button>
+
+
+
                             </div>
                         </div>
                     </div>
@@ -134,12 +193,14 @@ const ImmersivePlayer: React.FC = () => {
 
 
                 {/* 3. Top Controls */}
-                <div className={`absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 transition-all duration-500 ${isHovered || !session ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 md:opacity-100 md:translate-y-0'}`}>
+                <div className={`absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 transition-all duration-500 ${isHovered || !session ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
                     {/* Streamer Profile Removed */}
                     <div></div>
 
                     {/* Top Right Actions */}
-                    <div className="flex gap-3">
+                    <div className="flex items-center gap-3">
+
+
 
                         <button
                             onClick={toggleFullScreen}
@@ -161,16 +222,33 @@ const ImmersivePlayer: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 4. Right Side Actions (Floating) */}
-                <div className="absolute right-6 bottom-24 flex flex-col gap-4 z-50">
-                    <button onClick={() => setIsLiked(!isLiked)} className="group flex flex-col items-center gap-1">
-                        <div className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-300 active:scale-90 ${isLiked ? 'bg-brand-primary/20 border-brand-primary text-brand-primary' : 'bg-white/10 border-white/10 text-white hover:bg-white/20'}`}>
-                            <Heart size={24} className={isLiked ? 'fill-brand-primary' : ''} />
-                        </div>
-                        <span className="text-white text-[10px] font-bold shadow-black/50 shadow-sm">12k</span>
-                    </button>
-                </div>
 
+
+
+
+                {/* 4. Bottom Left Controls (Volume) */}
+                <div className={`absolute bottom-3 left-3 z-50 transition-all duration-500 ${isHovered || !session ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full p-1 pr-3 border border-white/10 group/volume">
+                        {/* Volume Toggle */}
+                        <button
+                            onClick={toggleMute}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                            title={isMuted ? "Ativar Som" : "Mudo"}
+                        >
+                            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                        </button>
+
+                        {/* Volume Slider */}
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={isMuted ? 0 : volume}
+                            onChange={handleVolumeChange}
+                            className="w-0 group-hover/volume:w-20 transition-all duration-300 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+                        />
+                    </div>
+                </div>
 
             </div>
 

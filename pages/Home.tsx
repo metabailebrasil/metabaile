@@ -75,9 +75,9 @@ const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
         <div className="relative z-10">
             <h3 className={`text-2xl font-display font-bold mb-2 text-brand-dark`}>{plan.name}</h3>
             <div className="flex items-baseline mb-6 flex-wrap gap-1">
-                <span className={`text-3xl md:text-4xl font-bold ${plan.highlight ? 'text-brand-primary' : 'text-brand-dark'}`}>{plan.price.split('/')[0]}</span>
+                <span className={`text-3xl md:text-4xl font-bold text-brand-dark`}>{plan.price.split('/')[0]}</span>
                 {plan.price.includes('/') && (
-                    <span className={`text-lg font-medium ${plan.highlight ? 'text-brand-primary/80' : 'text-brand-dark/60'}`}>
+                    <span className={`text-lg font-medium text-brand-dark/60`}>
                         /{plan.price.split('/')[1]}
                     </span>
                 )}
