@@ -133,7 +133,7 @@ export const PLANS: Plan[] = [
   {
     name: 'Celebridade',
     price: 'Influencer',
-    features: ['Painel de impacto', 'Bônus engajamento', 'Verificado'],
+    features: ['Painel de Impacto', 'Acesso Vitalício', 'Ganhos Reais', 'Verificado'],
     color: 'border-purple-300'
   }
 ];

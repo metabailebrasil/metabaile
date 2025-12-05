@@ -1,6 +1,92 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote, AlertTriangle } from 'lucide-react';
-return twMerge(clsx(inputs));
+import { supabase } from '../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+// --- MODERATOR SENTINEL RULES ---
+// 1. INTENSITY ALLOWED: caralho, porra, merda, foda (used for hype)
+// 2. BLOCK: Insults, Hate Speech, Spam
+
+const BLOCK_PATTERNS = [
+    // --- INSULTS & AGGRESSION ---
+    /vtn[cm]?/i,          // Vai tomar no cu/c*
+    /vsf/i,               // Vai se foder
+    /fdp/i,               // Filho da puta
+    /cuz[aÃ̃ã]o/i,
+    /c[uú]zao/i,
+    /arrombad[oa]/i,
+    /otari[oa]/i,
+    /imbecil/i,
+    /lixo/i,              // "Seu lixo"
+    /inuti[l]/i,
+    /burr[oa]/i,
+    /idiota/i,
+    /retardad[oa]/i,
+    /autist[a4]/i,        // Ableism
+    /doente/i,
+    /filh[oa][ ]?d[ae][ ]?puta/i,
+
+    // --- HATE SPEECH (Racism, Homophobia, Xenophobia) ---
+    /macac[oa]/i,
+    /m4c4c[oa]/i,
+    /pret[oa][ ]?fedid[oa]/i,
+    /viad[oa]/i,
+    /bi[cx]a/i,
+    /travec[oa]/i,
+    /mari[kc]a/i,
+    /boiola/i,
+    /sapat[aÃ̃ã]o/i,
+
+    // --- SEXUAL HARASSMENT ---
+    /chupa[ ]?meu/i,
+    /sent[a4][ ]?n[a4]/i,
+    /mostr[a4][ ]?(a|o|os|as)/i, // Context of "mostra a xereca" etc. Hard to regex safe.
+    /xerec[a4]/i,
+    /bucet[a4]/i,         // Often sexualized, unlike 'caralho'.
+    /pir[0o]c[a4]/i,
+    /nudes/i,
+
+    // --- EVASIVE PATTERNS ---
+    /f\.?d\.?p/i,
+    /c\.?u/i,             // "c u", "c.u"
+    /v\.?t\.?n\.?c/i
+];
+
+const validateMessage = (text: string): { isValid: boolean; reason?: string } => {
+    // 1. Normalize
+    const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 2. SPAM CHECK (Flood)
+    // Detects 50 or more repeated characters (e.g., "kkkkkk...").
+    const aggressiveSpamPattern = /(.)\1{49,}/;
+    if (aggressiveSpamPattern.test(text)) {
+        return { isValid: false, reason: 'Sem flood! (Muitas letras repetidas)' };
+    }
+
+    // 3. SPAM CHECK (Links)
+    if (/http[s]?:\/\//i.test(text) || /www\./i.test(text) || /\.com/i.test(text)) {
+        return { isValid: false, reason: 'Links não são permitidos.' };
+    }
+
+    // 4. BLOCK WORDS CHECK
+    for (const pattern of BLOCK_PATTERNS) {
+        if (pattern.test(normalized) || pattern.test(text)) {
+            // More specific reasons could be cool
+            if (pattern.source.includes('macac') || pattern.source.includes('viad')) {
+                return { isValid: false, reason: 'Discriminação não é tolerada aqui.' };
+            }
+            return { isValid: false, reason: 'Mantenha o respeito! Sem ofensas.' };
+        }
+    }
+
+    return { isValid: true };
+};
+
+// --- UTILS ---
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
 }
 
 // Generate consistent color from string

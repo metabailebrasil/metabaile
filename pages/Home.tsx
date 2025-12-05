@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import AnnouncementBar from '../components/AnnouncementBar';
 import ConstructionTicker from '../components/ConstructionTicker';
 import ImmersivePlayer from '../components/ImmersivePlayer';
+import InfluencerModal from '../components/InfluencerModal';
 import {
     APP_NAME,
     FEATURES,
@@ -64,7 +65,7 @@ const ArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => (
     </div>
 );
 
-const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
+const PlanCard: React.FC<{ plan: Plan; onSelect: (plan: Plan) => void }> = ({ plan, onSelect }) => (
     <div className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:scale-[1.02] group ${plan.highlight ? 'bg-white border-brand-primary shadow-[0_10px_40px_rgba(167,211,255,0.4)]' : 'bg-white/60 backdrop-blur-md border-white/40 hover:border-brand-primary/30 hover:shadow-xl'}`}>
         {plan.highlight && (
             <>
@@ -92,13 +93,29 @@ const PlanCard: React.FC<{ plan: Plan }> = ({ plan }) => (
                     </li>
                 ))}
             </ul>
-            <Button variant={plan.highlight ? 'primary' : 'secondary'} className="w-full">Escolher {plan.name}</Button>
+            <Button
+                variant={plan.highlight ? 'primary' : 'secondary'}
+                className="w-full"
+                onClick={() => onSelect(plan)}
+            >
+                Escolher {plan.name}
+            </Button>
         </div>
     </div>
 );
 
 function Home() {
+    const [showInfluencerModal, setShowInfluencerModal] = useState(false);
     const scrollToStage = () => document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
+
+    const handlePlanSelect = (plan: Plan) => {
+        if (plan.name === 'Celebridade') {
+            setShowInfluencerModal(true);
+        } else {
+            // Default action (e.g., scroll to register or generic alert for now)
+            alert(`Você escolheu o plano ${plan.name}. Em breve redirecionaremos para o pagamento.`);
+        }
+    };
 
     return (
         <div className="min-h-screen font-sans bg-brand-light selection:bg-brand-primary/30">
@@ -193,7 +210,9 @@ function Home() {
                 <div className="relative z-10">
                     <SectionTitle title="Escolha Seu Acesso" subtitle="De visitante a VIP. Tem espaço para todo mundo." />
                     <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-6">
-                        {PLANS.map((plan, idx) => (<PlanCard key={idx} plan={plan} />))}
+                        {PLANS.map((plan, idx) => (
+                            <PlanCard key={idx} plan={plan} onSelect={handlePlanSelect} />
+                        ))}
                     </div>
                 </div>
             </section>
@@ -227,6 +246,8 @@ function Home() {
                     </div>
                 </div>
             </footer>
+
+            <InfluencerModal isOpen={showInfluencerModal} onClose={() => setShowInfluencerModal(false)} />
         </div>
     );
 }
