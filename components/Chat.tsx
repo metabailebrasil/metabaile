@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// --- UTILS ---
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
+import { Send, Smile, Users, MessageSquare, Plus, Lock, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote, AlertTriangle } from 'lucide-react';
+return twMerge(clsx(inputs));
 }
 
 // Generate consistent color from string
@@ -74,6 +67,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     const [joinRoomId, setJoinRoomId] = useState('');
     const [joinRoomPass, setJoinRoomPass] = useState('');
     const [isCopied, setIsCopied] = useState(false);
+    const [warning, setWarning] = useState<string | null>(null);
 
     // Refs
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -260,6 +254,14 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
         if (activeTab === 'group' && timeLeft === 'EXPIRADA') {
             alert('Esta sala expirou. Crie uma nova resenha!');
+            return;
+        }
+
+        // Profanity Check
+        const validation = validateMessage(inputValue);
+        if (!validation.isValid) {
+            setWarning(validation.reason || "Mensagem bloqueada.");
+            setTimeout(() => setWarning(null), 4000);
             return;
         }
 
@@ -494,7 +496,30 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
             {/* Input Area */}
             {session ? (
-                <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm">
+                <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm relative">
+                    {/* CUSTOM WARNING TOAST */}
+                    <AnimatePresence>
+                        {warning && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl backdrop-blur-md shadow-xl flex items-center gap-3 z-30"
+                            >
+                                <div className="bg-red-500/20 p-2 rounded-full">
+                                    <AlertTriangle size={18} className="text-red-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-bold text-xs text-red-500 uppercase tracking-wider mb-0.5">Mensagem Bloqueada</p>
+                                    <p className="text-sm">{warning}</p>
+                                </div>
+                                <button onClick={() => setWarning(null)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                    <div className="w-4 h-4 flex items-center justify-center text-red-400">✕</div>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     <div className="relative group">
                         <input
                             type="text"
