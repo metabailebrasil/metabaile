@@ -57,16 +57,15 @@ const Auth: React.FC = () => {
         setError(null);
 
         try {
-            // 1. Create User with Metadata (Bypassing profiles table to avoid SQL setup)
+            // 1. Criar o usuário no Sistema de Autenticação
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     data: {
                         full_name: fullName,
-                        birth_date: birthDate,
-                        music_preferences: selectedGenres,
-                        subscription_status: 'free'
+                        // Salvamos no metadata também por garantia/facilidade no front
+                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
                     }
                 }
             });
@@ -74,12 +73,33 @@ const Auth: React.FC = () => {
             if (authError) throw authError;
             if (!authData.user) throw new Error("Erro ao criar usuário.");
 
-            // Navigate immediately
+            // 2. O PULO DO GATO: Inserir os dados na tabela 'profiles'
+            // Isso conecta o Login aos Dados de Negócio (Gostos, Idade, etc)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id, // O segredo: o ID é o mesmo do Auth
+                        full_name: fullName,
+                        birth_date: birthDate,
+                        music_preferences: selectedGenres,
+                        subscription_status: 'free'
+                    }
+                ]);
+
+            if (profileError) {
+                console.error("Erro ao criar perfil:", profileError);
+                // Opcional: Deletar o usuário se o perfil falhar, para não ficar "meio cadastro"
+                throw new Error("Erro ao salvar dados do perfil.");
+            }
+
+            // Sucesso total
             navigate('/');
+
         } catch (err: any) {
             let msg = err.message;
-            if (msg.includes("Email not confirmed")) msg = "Email não confirmado. Verifique sua caixa de entrada ou desative a confirmação no Supabase.";
-            if (msg.includes("User already registered")) msg = "Este email já está cadastrado.";
+            if (msg.includes("Email not confirmed")) msg = "Verifique seu email para confirmar o cadastro.";
+            else if (msg.includes("User already registered")) msg = "Este email já está cadastrado.";
             setError(msg);
         } finally {
             setLoading(false);
