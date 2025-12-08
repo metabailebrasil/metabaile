@@ -32,6 +32,31 @@ const ImmersivePlayer: React.FC = () => {
     const [videoId, setVideoId] = useState(LIVE_STREAM_VIDEO_ID);
 
     useEffect(() => {
+        // --- AUTH STATE ---
+        // Check active session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        // Listen for auth changes
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
+
+    /* 
+    // Temporarily disabled remote stream config to fix "Old Live" issue.
+    // Re-enable if you want to control the stream from the database (stream_config table).
+    
+    useEffect(() => {
         // 1. Fetch initial video ID from DB
         const fetchStreamConfig = async () => {
             const { data, error } = await supabase
@@ -65,26 +90,11 @@ const ImmersivePlayer: React.FC = () => {
             )
             .subscribe();
 
-        // --- AUTH STATE ---
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setLoading(false);
-        });
-
-        // Listen for auth changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setLoading(false);
-        });
-
         return () => {
-            subscription.unsubscribe();
-            supabase.removeChannel(channel);
+             supabase.removeChannel(channel);
         };
     }, []);
+    */
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
