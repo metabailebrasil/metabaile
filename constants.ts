@@ -119,7 +119,7 @@ export const PLANS: Plan[] = [
   {
     name: 'Fan',
     price: 'R$ 9,99',
-    features: ['7 dias de acesso', 'Acesso aos próximos shows', 'Chat exclusivo', 'Ranking', 'Emotes'],
+    features: ['Sexta e Sábado', 'Acesso aos próximos shows', 'Chat exclusivo', 'Ranking', 'Emotes'],
     color: 'border-brand-primary',
     highlight: false
   },

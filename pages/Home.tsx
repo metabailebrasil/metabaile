@@ -1,5 +1,7 @@
-import React, { useState, PropsWithChildren } from 'react';
+import React, { useState, useEffect, PropsWithChildren } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { createCheckoutSession } from '../lib/stripe';
 import Navbar from '../components/Navbar';
 import AnnouncementBar from '../components/AnnouncementBar';
 import ConstructionTicker from '../components/ConstructionTicker';
@@ -108,6 +110,30 @@ const PlanCard: React.FC<{ plan: Plan; onSelect: (plan: Plan) => void }> = ({ pl
 function Home() {
     const navigate = useNavigate();
     const [showInfluencerModal, setShowInfluencerModal] = useState(false);
+    const [activeEvent, setActiveEvent] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchActive = async () => {
+            const { data } = await supabase
+                .from('events')
+                .select('*')
+                .eq('status', 'active')
+                .maybeSingle();
+            if (data) setActiveEvent(data);
+        }
+        fetchActive();
+    }, []);
+
+    const handleBuyTicket = async () => {
+        if (!activeEvent) return;
+        const result = await createCheckoutSession(activeEvent.id);
+        if (result.error === 'need_auth') {
+            navigate('/auth');
+        } else {
+            alert('Integração Stripe (Stub): Redirecionando para checkout...');
+        }
+    };
+
     const scrollToStage = () => document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
 
     const handlePlanSelect = (plan: Plan) => {
@@ -152,6 +178,18 @@ function Home() {
                     <p className="text-lg md:text-2xl text-brand-gray mb-10 max-w-3xl mx-auto font-light leading-relaxed whitespace-pre-line">
                         {HERO_CONTENT.subTagline}
                     </p>
+
+
+                    {activeEvent && (
+                        <div className="flex flex-col items-center gap-8 mb-10 animate-fade-in-up">
+                            <p className="text-2xl md:text-3xl text-brand-dark font-display font-bold uppercase tracking-widest">
+                                {new Date(activeEvent.show_date_start || activeEvent.sales_start_date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </p>
+                            <Button variant="primary" className="text-xl px-12 py-5 shadow-2xl shadow-brand-primary/40 hover:scale-105" onClick={handleBuyTicket}>
+                                Comprar Acesso (R$ 9,99)
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Scroll indicator removed */}
