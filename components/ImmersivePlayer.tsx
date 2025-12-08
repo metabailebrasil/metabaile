@@ -52,49 +52,62 @@ const ImmersivePlayer: React.FC = () => {
         };
     }, []);
 
-    /* 
-    // Temporarily disabled remote stream config to fix "Old Live" issue.
-    // Re-enable if you want to control the stream from the database (stream_config table).
-    
+    // 3. Dynamic Stream URL Logic (with Playlist Fallback)
     useEffect(() => {
-        // 1. Fetch initial video ID from DB
-        const fetchStreamConfig = async () => {
-            const { data, error } = await supabase
-                .from('stream_config')
-                .select('video_id')
+        const fetchConfig = async () => {
+            // 1. Try to fetch the currently ACTIVE event
+            const { data: eventData } = await supabase
+                .from('events')
+                .select('stream_url')
+                .eq('status', 'active')
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .single();
 
-            if (data?.video_id) {
-                setVideoId(data.video_id);
+            if (eventData && eventData.stream_url) {
+                console.log("▶ Playing Active Event Stream:", eventData.stream_url);
+                setVideoId(eventData.stream_url);
+                return;
+            }
+
+            // 2. If no active event, fetch Fallback Playlist
+            console.log("No active event, checking playlist...");
+            const { data: playlistData } = await supabase
+                .from('playlist')
+                .select('video_id')
+                .eq('is_active', true);
+
+            if (playlistData && playlistData.length > 0) {
+                // Pick a random video from playlist
+                const randomIndex = Math.floor(Math.random() * playlistData.length);
+                const randomVideo = playlistData[randomIndex];
+                console.log("▶ Playing Playlist Video:", randomVideo.video_id);
+                setVideoId(randomVideo.video_id);
+            } else {
+                // 3. Last resort fallback
+                setVideoId(LIVE_STREAM_VIDEO_ID);
             }
         };
 
-        fetchStreamConfig();
+        fetchConfig();
 
-        // 2. Subscribe to Realtime Updates
+        // Optional: Listen for event updates to auto-switch stream
         const channel = supabase
-            .channel('stream_config_changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'stream_config',
-                },
-                (payload) => {
-                    if (payload.new && payload.new.video_id) {
-                        console.log('New Stream ID received:', payload.new.video_id);
-                        setVideoId(payload.new.video_id);
-                    }
+            .channel('public:events')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events' }, (payload) => {
+                if (payload.new && payload.new.status === 'active' && payload.new.stream_url) {
+                    setVideoId(payload.new.stream_url); // Switch to live immediately
+                } else if (payload.new && payload.new.status !== 'active') {
+                    // Event ended? Reload config to get playlist (basic refresh)
+                    fetchConfig();
                 }
-            )
+            })
             .subscribe();
 
         return () => {
-             supabase.removeChannel(channel);
+            supabase.removeChannel(channel);
         };
     }, []);
-    */
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
