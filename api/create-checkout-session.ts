@@ -50,6 +50,17 @@ export default async function handler(
                         quantity: 1,
                     }
                 ];
+            } else if (priceId === 'prod_TZaoKg7gwyvkMv') {
+                lineItems = [
+                    {
+                        price_data: {
+                            currency: 'brl',
+                            product: 'prod_TZaoKg7gwyvkMv',
+                            unit_amount: 999, // R$ 9,99
+                        },
+                        quantity: 1,
+                    }
+                ];
             } else {
                 // Fallback or other prices
                 lineItems = [

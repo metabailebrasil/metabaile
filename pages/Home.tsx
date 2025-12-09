@@ -128,7 +128,7 @@ function Home() {
 
     const handleBuyTicket = async () => {
         if (!activeEvent) return;
-        const result = await createCheckoutSession(activeEvent.id);
+        const result = await createCheckoutSession(activeEvent.id, 'prod_TZaoKg7gwyvkMv');
         if (result.error === 'need_auth') {
             navigate('/auth');
         } else {
