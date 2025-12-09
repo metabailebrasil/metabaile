@@ -2,16 +2,36 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-12-18.acacia' as any, // Cast to any to bypass strict typing if mismatch, or use '2025-02-24.acacia' if valid
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+if (!stripeSecretKey) {
+    console.error('CRITICAL: STRIPE_SECRET_KEY is missing from environment variables.');
+}
+
+const stripe = new Stripe(stripeSecretKey || '', {
+    apiVersion: '2024-12-18.acacia' as any, // Using 'any' to bypass strict beta version typing issues
+    typescript: true,
 });
 
 export default async function handler(
     req: VercelRequest,
     res: VercelResponse
 ) {
+    // CORS headers for security if needed (Vercel handles this mostly, but good to be explicit for API)
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    if (!stripeSecretKey) {
+        return res.status(500).json({ error: 'Server misconfiguration: Stripe key missing' });
     }
 
     try {
