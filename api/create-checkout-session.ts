@@ -8,7 +8,7 @@ if (!stripeSecretKey) {
     console.error('CRITICAL: STRIPE_SECRET_KEY is missing from environment variables.');
 }
 
-const stripe = new Stripe(stripeSecretKey || '', {
+const stripe = new Stripe((stripeSecretKey || '').trim(), {
     apiVersion: '2024-12-18.acacia' as any, // Using 'any' to bypass strict beta version typing issues
     typescript: true,
 });
