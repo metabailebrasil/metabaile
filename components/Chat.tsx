@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { ChatMessage } from './ChatMessage';
+import { Leaderboard, MOCK_DONORS } from './Leaderboard';
 
 // --- MODERATOR SENTINEL RULES ---
 const BLOCK_PATTERNS = [
@@ -61,6 +63,7 @@ const SLOW_MODE_DELAY = 1000; // Adjusted for better UX
 
 const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     const [activeTab, setActiveTab] = useState<'public' | 'group'>('public');
+    const [viewMode, setViewMode] = useState<'chat' | 'ranking'>('chat');
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [session, setSession] = useState<any>(null);
@@ -276,24 +279,38 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
             user_meta: { name: userMeta.full_name || session.user.email.split('@')[0], avatar: userMeta.avatar_url },
             is_donation: true,
             donation_amount: selectedAmount,
-            status: 'PENDING',
-            highlight_color: selectedAmount >= 50 ? '#FFD700' : (selectedAmount >= 10 ? '#E91E63' : '#2196F3')
+            status: 'PENDING'
         }]).select().single();
 
-        if (error || !msg) { alert('Erro ao iniciar doação.'); setIsProcessingDonation(false); return; }
+        if (error || !msg) {
+            console.error(error);
+            alert('Erro ao iniciar doação.');
+            setIsProcessingDonation(false);
+            return;
+        }
 
-        // 2. Call API
+        // 2. SIMULATION MODE (Bypassing Stripe for Test)
         try {
-            const res = await fetch('/api/chat/donate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message_id: msg.id, amount: selectedAmount, message_content: donationMessage })
-            });
-            const json = await res.json();
-            if (json.url) window.location.href = json.url;
-            else alert('Erro ao gerar pagamento.');
-        } catch (e) { alert('Erro de conexão.'); }
-        setIsProcessingDonation(false);
+            // Simulate processing time
+            setTimeout(async () => {
+                const { error: updateError } = await supabase
+                    .from('messages')
+                    .update({ status: 'CONFIRMED' })
+                    .eq('id', msg.id);
+
+                if (updateError) {
+                    alert('Erro ao confirmar doação simulada.');
+                } else {
+                    setShowDonationModal(false);
+                    setDonationMessage('');
+                }
+                setIsProcessingDonation(false);
+            }, 1500);
+
+        } catch (e) {
+            alert('Erro de conexão.');
+            setIsProcessingDonation(false);
+        }
     };
 
     // Pinned Messages logic:
@@ -313,177 +330,203 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         <div className={cn("bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-500/20 flex flex-col overflow-hidden font-sans h-full", className)}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-sky-500/10 via-transparent to-transparent pointer-events-none"></div>
 
-            <div className="p-4 bg-transparent border-b border-white/5 flex items-center justify-between z-10 relative">
-                <div className="flex bg-black/40 rounded-lg p-1 gap-1 border border-white/5">
-                    <button onClick={() => setActiveTab('public')} className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'public' ? "bg-sky-500/20 text-sky-400" : "text-slate-500")}>
-                        <MessageSquare size={16} /> <span className="hidden md:inline">Geral</span>
+
+
+            {/* MAIN HEADER & TABS */}
+            <div className="p-3 bg-transparent border-b border-white/5 flex flex-col gap-3 z-10 relative">
+
+                {/* Main Tabs (Chat vs Ranking) */}
+                <div className="flex bg-black/40 rounded-xl p-1 gap-1 border border-white/5 w-full">
+                    <button
+                        onClick={() => setViewMode('chat')}
+                        className={cn(
+                            "flex-1 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
+                            viewMode === 'chat' ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                        )}
+                    >
+                        <MessageSquare size={16} /> Chat
                     </button>
-                    <button onClick={() => setActiveTab('group')} className={cn("px-3 py-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold", activeTab === 'group' ? "bg-sky-500/20 text-sky-400" : "text-slate-500")}>
-                        <Users size={16} /> <span className="hidden md:inline">Resenha</span>
+                    <button
+                        onClick={() => setViewMode('ranking')}
+                        className={cn(
+                            "flex-1 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
+                            viewMode === 'ranking' ? "bg-yellow-600/20 text-yellow-400 border border-yellow-500/20 shadow-sm" : "text-slate-500 hover:text-slate-300"
+                        )}
+                    >
+                        <Crown size={16} /> Ranking
                     </button>
                 </div>
-                {activeTab === 'group' && timeLeft && <span className="text-xs font-mono bg-red-500/20 text-red-400 px-2 rounded ml-auto">{timeLeft}</span>}
+
+                {/* Sub-Tabs (Only visible in Chat mode) */}
+                {viewMode === 'chat' && (
+                    <div className="flex justify-between items-center">
+                        <div className="flex gap-4 px-2">
+                            <button onClick={() => setActiveTab('public')} className={cn("text-sm font-bold transition-colors relative", activeTab === 'public' ? "text-white" : "text-slate-500")}>
+                                Geral
+                                {activeTab === 'public' && <motion.div layoutId="underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-sky-500 rounded-full" />}
+                            </button>
+                            <button onClick={() => setActiveTab('group')} className={cn("text-sm font-bold transition-colors relative", activeTab === 'group' ? "text-white" : "text-slate-500")}>
+                                Resenha
+                                {activeTab === 'group' && <motion.div layoutId="underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-sky-500 rounded-full" />}
+                            </button>
+                        </div>
+                        {activeTab === 'group' && timeLeft && <span className="text-xs font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded ml-auto">{timeLeft}</span>}
+                    </div>
+                )}
+
             </div>
 
-            {/* Sub-Header / Pinned Donations */}
-            {pinnedMessages.length > 0 && activeTab === 'public' && (
-                <div className="bg-gradient-to-r from-amber-500/10 to-transparent border-b border-amber-500/20 p-2 flex gap-2 overflow-x-auto scrollbar-hide z-10 relative">
-                    {pinnedMessages.map(msg => (
-                        <div key={msg.id} className="flex-shrink-0 bg-slate-900/80 border border-amber-500/40 rounded-lg p-2 min-w-[200px] flex items-start gap-2 max-w-[300px]">
-                            <img src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`} className="w-8 h-8 rounded-full bg-slate-800" />
-                            <div className="overflow-hidden">
-                                <p className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                                    <Crown size={10} /> R$ {msg.donation_amount?.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-white truncate font-medium">{msg.user_meta?.name}</p>
-                                <p className="text-[11px] text-slate-300 truncate">{msg.content}</p>
-                            </div>
-                        </div>
-                    ))}
+            {/* KING OF THE HILL BANNER (Visible in Chat Mode) */}
+            {viewMode === 'chat' && (
+                <div className="bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-transparent border-b border-yellow-500/20 px-3 py-1.5 flex items-center gap-2 relative z-10 shrink-0">
+                    <Crown size={14} className="text-yellow-400 animate-pulse" fill="currentColor" />
+                    <span className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider">Rei do Baile:</span>
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <img src={MOCK_DONORS[0].avatar} className="w-4 h-4 rounded-full border border-yellow-500/50" alt="Top 1" />
+                        <span className="text-xs font-bold text-yellow-100 truncate">{MOCK_DONORS[0].name}</span>
+                        <span className="text-[10px] text-yellow-400 font-mono">R$ {MOCK_DONORS[0].amount}</span>
+                    </div>
                 </div>
             )}
 
-            {/* Tabs for Groups */}
-            {activeTab === 'group' && (
-                <div className="p-2 bg-black/20 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide z-10 relative">
-                    <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1 text-xs font-bold"><Plus size={14} /> Nova</button>
-                    <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800/50 text-slate-400 border border-white/10 flex items-center gap-1 text-xs font-bold"><Hash size={14} /> Entrar</button>
-                    <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
-                    {myRooms.map(room => (
-                        <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={cn("px-3 py-1 rounded-full text-xs font-bold border transition-all whitespace-nowrap", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>{room.emoji} {room.name}</button>
-                    ))}
-                </div>
-            )}
-
-            <div className="flex-1 overflow-y-auto py-2 space-y-1 scrollbar-hide overflow-x-hidden relative z-10" ref={messagesContainerRef} onScroll={handleScroll}>
-                {activeTab === 'group' && myRooms.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80"><Users size={32} className="text-sky-400 mb-4" /><h3 className="text-white font-bold">Resenha Privada</h3><p className="text-slate-400 text-sm mb-4">Crie uma sala para seus amigos.</p><button onClick={() => setShowCreateModal(true)} className="px-6 py-2 bg-sky-500 text-white font-bold rounded-full">Criar Sala</button></div>
+            {/* CONTENT AREA */}
+            <div className="flex-1 overflow-hidden relative z-10 flex flex-col">
+                {viewMode === 'ranking' ? (
+                    <Leaderboard />
                 ) : (
                     <>
-                        <AnimatePresence initial={false}>
-                            {messages.map((msg) => {
-                                const isSuper = msg.is_donation && msg.status === 'CONFIRMED';
-                                const amount = msg.donation_amount || 0;
-                                let styleClass = "group px-2 py-0.5 hover:bg-white/5 transition-colors text-[13px] leading-5 break-words rounded-lg mx-1";
-                                let contentClass = "text-slate-200";
-
-                                if (isSuper) {
-                                    if (amount >= 50) {
-                                        styleClass = "mx-2 my-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-600/10 border border-amber-500/50 shadow-lg shadow-amber-500/10 animate-pulse-slow";
-                                        contentClass = "text-amber-100 font-bold text-base";
-                                    } else if (amount >= 10) {
-                                        styleClass = "mx-2 my-2 p-3 rounded-lg bg-pink-500/10 border border-pink-500/30";
-                                        contentClass = "text-pink-100 font-medium";
-                                    } else {
-                                        styleClass = "mx-2 my-1 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20";
-                                        contentClass = "text-emerald-100";
-                                    }
-                                }
-
-                                return (
-                                    <motion.div key={msg.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className={styleClass}>
-                                        <div className={cn("flex items-baseline gap-1", isSuper && "flex-col gap-1")}>
-                                            <div className="flex items-center gap-1">
-                                                {!isSuper && <span className="text-[10px] text-slate-500 font-mono opacity-50">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
-                                                {isSuper && <span className={cn("text-[10px] font-bold px-1.5 rounded-sm flex items-center gap-0.5", amount >= 50 ? "bg-amber-500 text-black" : "bg-emerald-500 text-black")}><Star size={8} /> R$ {amount.toFixed(2)}</span>}
-                                                {msg.role_badge === 'admin' && <Shield size={12} className="text-red-500" />}
-                                                <span className={cn("font-bold cursor-pointer", getUsernameColor(msg.user_meta?.name || 'User'))}>{msg.user_meta?.name || 'Usuário'}</span>
-                                                {!isSuper && <span className="text-slate-500">:</span>}
-                                            </div>
-                                            <span className={cn(contentClass, msg.isMe && !isSuper && "font-medium text-white")}>{msg.content}</span>
+                        {/* Pinned Donations (Only in Public Chat) */}
+                        {pinnedMessages.length > 0 && activeTab === 'public' && (
+                            <div className="bg-gradient-to-r from-amber-500/10 to-transparent border-b border-amber-500/20 p-2 flex gap-2 overflow-x-auto scrollbar-hide z-10 relative shrink-0">
+                                {pinnedMessages.map(msg => (
+                                    <div key={msg.id} className="flex-shrink-0 bg-slate-900/80 border border-amber-500/40 rounded-lg p-2 min-w-[200px] flex items-start gap-2 max-w-[300px]">
+                                        <img src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`} className="w-8 h-8 rounded-full bg-slate-800" />
+                                        <div className="overflow-hidden">
+                                            <p className="text-xs font-bold text-amber-400 flex items-center gap-1">
+                                                <Crown size={10} /> R$ {msg.donation_amount?.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-white truncate font-medium">{msg.user_meta?.name}</p>
+                                            <p className="text-[11px] text-slate-300 truncate">{msg.content}</p>
                                         </div>
-                                    </motion.div>
-                                )
-                            })}
-                        </AnimatePresence>
-                        <div ref={messagesEndRef} />
-                        {!isScrolledNearBottom && hasNewMessages && (
-                            <button onClick={() => scrollToBottom(true)} className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2"><ArrowDown size={14} /> Novas mensagens</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Tabs for Groups */}
+                        {activeTab === 'group' && (
+                            <div className="p-2 bg-black/20 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
+                                {/* ... existing group buttons ... */}
+                                <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1 text-xs font-bold"><Plus size={14} /> Nova</button>
+                                <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800/50 text-slate-400 border border-white/10 flex items-center gap-1 text-xs font-bold"><Hash size={14} /> Entrar</button>
+                                <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
+                                {myRooms.map(room => (
+                                    <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={cn("px-3 py-1 rounded-full text-xs font-bold border transition-all whitespace-nowrap", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>{room.emoji} {room.name}</button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Messages List */}
+                        <div className="flex-1 overflow-y-auto py-2 space-y-1 scrollbar-hide overflow-x-hidden relative" ref={messagesContainerRef} onScroll={handleScroll}>
+                            {activeTab === 'group' && myRooms.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80"><Users size={32} className="text-sky-400 mb-4" /><h3 className="text-white font-bold">Resenha Privada</h3><p className="text-slate-400 text-sm mb-4">Crie uma sala para seus amigos.</p><button onClick={() => setShowCreateModal(true)} className="px-6 py-2 bg-sky-500 text-white font-bold rounded-full">Criar Sala</button></div>
+                            ) : (
+                                <>
+                                    <AnimatePresence initial={false}>
+                                        {messages.map((msg) => (
+                                            <ChatMessage key={msg.id} msg={msg} />
+                                        ))}
+                                    </AnimatePresence>
+                                    <div ref={messagesEndRef} />
+                                    {!isScrolledNearBottom && hasNewMessages && (
+                                        <button onClick={() => scrollToBottom(true)} className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2"><ArrowDown size={14} /> Novas mensagens</button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Input */}
+                        {session ? (
+                            <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm relative">
+                                {warning && <div className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 text-xs"><AlertTriangle size={14} />{warning}</div>}
+                                <div className="relative group">
+                                    <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder={activeTab === 'public' ? "Comente na live..." : "Mensagem privada..."} className="w-full bg-slate-950/50 text-white placeholder-slate-500 text-sm rounded-full py-3.5 pl-5 pr-24 border border-sky-500/20 focus:outline-none focus:border-sky-500/50 focus:ring-1 transition-all shadow-inner" />
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                        <button onClick={() => setShowDonationModal(true)} className="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 transform active:scale-95"><Banknote size={18} /></button>
+                                        <button onClick={handleSendMessage} disabled={!inputValue.trim()} className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 transform active:scale-95"><Send size={18} /></button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-6 text-center"><button onClick={() => window.location.href = '/auth'} className="px-6 py-2.5 bg-sky-500 text-white font-bold rounded-full hover:bg-sky-400 shadow-lg">Entrar no Chat</button></div>
+                        )}
+
+                        {/* Modals */}
+                        {(showCreateModal || showJoinModal) && (
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                                <div className="bg-slate-900 p-6 rounded-2xl border border-sky-500/20 w-full max-w-sm relative">
+                                    <h3 className="text-white font-bold text-lg mb-4">{showCreateModal ? 'Criar Sala' : 'Entrar na Sala'}</h3>
+                                    <input type="text" placeholder={showCreateModal ? "Nome" : "Nome ou ID"} className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-3" value={showCreateModal ? newRoomName : joinRoomId} onChange={e => showCreateModal ? setNewRoomName(e.target.value) : setJoinRoomId(e.target.value)} />
+                                    <input type="password" placeholder="Senha (Opcional)" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-4" value={showCreateModal ? newRoomPass : joinRoomPass} onChange={e => showCreateModal ? setNewRoomPass(e.target.value) : setJoinRoomPass(e.target.value)} />
+                                    <div className="flex gap-2"><button onClick={() => { setShowCreateModal(false); setShowJoinModal(false) }} className="flex-1 py-2 text-slate-400">Cancelar</button><button onClick={showCreateModal ? handleCreateRoom : handleJoinRoom} className="flex-1 py-2 bg-sky-500 text-white font-bold rounded-xl">Confirmar</button></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Donation Modal */}
+                        {showDonationModal && (
+                            <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="bg-slate-900 w-full max-w-xs rounded-3xl border border-emerald-500/30 shadow-2xl overflow-hidden flex flex-col">
+                                    <div className="bg-emerald-500/10 p-4 border-b border-emerald-500/20 text-center relative">
+                                        <button onClick={() => setShowDonationModal(false)} className="absolute top-2 right-2 text-slate-400 hover:text-white"><X size={20} /></button>
+                                        <Banknote size={32} className="mx-auto text-emerald-400 mb-2" />
+                                        <h3 className="text-white font-bold text-lg">Super Chat</h3>
+                                        <p className="text-emerald-300 text-xs">Destaque sua mensagem!</p>
+                                    </div>
+                                    <div className="p-4 space-y-4">
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {[5, 10, 20, 50].map(val => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => setSelectedAmount(val)}
+                                                    className={cn("py-2 px-1 rounded-xl text-sm font-bold border transition-all", selectedAmount === val ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-slate-800 text-slate-400 border-slate-700 hover:border-emerald-500/50")}
+                                                >
+                                                    R${val}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="bg-slate-950/50 p-3 rounded-xl border border-emerald-500/20">
+                                            <span className={cn("text-xs font-bold mb-1 block", selectedAmount >= 50 ? "text-amber-400" : (selectedAmount >= 10 ? "text-pink-400" : "text-emerald-400"))}>
+                                                {selectedAmount >= 50 ? "Dourado + Pin 10min" : (selectedAmount >= 10 ? "Destacado + Pin 2min" : "Borda Colorida")}
+                                            </span>
+                                            <textarea
+                                                value={donationMessage}
+                                                onChange={e => setDonationMessage(e.target.value.slice(0, 200))}
+                                                placeholder="Sua mensagem de apoio..."
+                                                className="w-full bg-transparent text-white text-sm focus:outline-none resize-none h-16"
+                                            />
+                                            <div className="text-right text-[10px] text-slate-500">{donationMessage.length}/200</div>
+                                        </div>
+                                        <button
+                                            onClick={handleDonateConfirm}
+                                            disabled={isProcessingDonation}
+                                            className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-wait"
+                                        >
+                                            {isProcessingDonation ? "Processando..." : (
+                                                <>
+                                                    <CreditCard size={18} />
+                                                    Pagar R$ {selectedAmount},00
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </>
                 )}
             </div>
-
-            {/* Input */}
-            {session ? (
-                <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm relative">
-                    {warning && <div className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 text-xs"><AlertTriangle size={14} />{warning}</div>}
-                    <div className="relative group">
-                        <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder={activeTab === 'public' ? "Comente na live..." : "Mensagem privada..."} className="w-full bg-slate-950/50 text-white placeholder-slate-500 text-sm rounded-full py-3.5 pl-5 pr-24 border border-sky-500/20 focus:outline-none focus:border-sky-500/50 focus:ring-1 transition-all shadow-inner" />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                            <button onClick={() => setShowDonationModal(true)} className="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 transform active:scale-95"><Banknote size={18} /></button>
-                            <button onClick={handleSendMessage} disabled={!inputValue.trim()} className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 transform active:scale-95"><Send size={18} /></button>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="p-6 text-center"><button onClick={() => window.location.href = '/auth'} className="px-6 py-2.5 bg-sky-500 text-white font-bold rounded-full hover:bg-sky-400 shadow-lg">Entrar no Chat</button></div>
-            )}
-
-            {/* Modals */}
-            {(showCreateModal || showJoinModal) && (
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 p-6 rounded-2xl border border-sky-500/20 w-full max-w-sm relative">
-                        <h3 className="text-white font-bold text-lg mb-4">{showCreateModal ? 'Criar Sala' : 'Entrar na Sala'}</h3>
-                        <input type="text" placeholder={showCreateModal ? "Nome" : "Nome ou ID"} className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-3" value={showCreateModal ? newRoomName : joinRoomId} onChange={e => showCreateModal ? setNewRoomName(e.target.value) : setJoinRoomId(e.target.value)} />
-                        <input type="password" placeholder="Senha (Opcional)" className="w-full bg-black/40 text-white p-3 rounded-xl border border-white/10 mb-4" value={showCreateModal ? newRoomPass : joinRoomPass} onChange={e => showCreateModal ? setNewRoomPass(e.target.value) : setJoinRoomPass(e.target.value)} />
-                        <div className="flex gap-2"><button onClick={() => { setShowCreateModal(false); setShowJoinModal(false) }} className="flex-1 py-2 text-slate-400">Cancelar</button><button onClick={showCreateModal ? handleCreateRoom : handleJoinRoom} className="flex-1 py-2 bg-sky-500 text-white font-bold rounded-xl">Confirmar</button></div>
-                    </div>
-                </div>
-            )}
-
-            {/* Donation Modal */}
-            {showDonationModal && (
-                <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="bg-slate-900 w-full max-w-xs rounded-3xl border border-emerald-500/30 shadow-2xl overflow-hidden flex flex-col">
-                        <div className="bg-emerald-500/10 p-4 border-b border-emerald-500/20 text-center relative">
-                            <button onClick={() => setShowDonationModal(false)} className="absolute top-2 right-2 text-slate-400 hover:text-white"><X size={20} /></button>
-                            <Banknote size={32} className="mx-auto text-emerald-400 mb-2" />
-                            <h3 className="text-white font-bold text-lg">Super Chat</h3>
-                            <p className="text-emerald-300 text-xs">Destaque sua mensagem!</p>
-                        </div>
-                        <div className="p-4 space-y-4">
-                            <div className="grid grid-cols-4 gap-2">
-                                {[5, 10, 20, 50].map(val => (
-                                    <button
-                                        key={val}
-                                        onClick={() => setSelectedAmount(val)}
-                                        className={cn("py-2 px-1 rounded-xl text-sm font-bold border transition-all", selectedAmount === val ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-slate-800 text-slate-400 border-slate-700 hover:border-emerald-500/50")}
-                                    >
-                                        R${val}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="bg-slate-950/50 p-3 rounded-xl border border-emerald-500/20">
-                                <span className={cn("text-xs font-bold mb-1 block", selectedAmount >= 50 ? "text-amber-400" : (selectedAmount >= 10 ? "text-pink-400" : "text-emerald-400"))}>
-                                    {selectedAmount >= 50 ? "Dourado + Pin 10min" : (selectedAmount >= 10 ? "Destacado + Pin 2min" : "Borda Colorida")}
-                                </span>
-                                <textarea
-                                    value={donationMessage}
-                                    onChange={e => setDonationMessage(e.target.value.slice(0, 200))}
-                                    placeholder="Sua mensagem de apoio..."
-                                    className="w-full bg-transparent text-white text-sm focus:outline-none resize-none h-16"
-                                />
-                                <div className="text-right text-[10px] text-slate-500">{donationMessage.length}/200</div>
-                            </div>
-                            <button
-                                onClick={handleDonateConfirm}
-                                disabled={isProcessingDonation}
-                                className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-wait"
-                            >
-                                {isProcessingDonation ? "Processando..." : (
-                                    <>
-                                        <CreditCard size={18} />
-                                        Pagar R$ {selectedAmount},00
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
-
 export default Chat;

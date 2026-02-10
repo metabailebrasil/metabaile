@@ -64,7 +64,8 @@ const Auth: React.FC = () => {
                 options: {
                     data: {
                         full_name: fullName,
-                        // Salvamos no metadata também por garantia/facilidade no front
+                        birth_date: birthDate,
+                        music_preferences: selectedGenres,
                         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
                     }
                 }
@@ -73,25 +74,8 @@ const Auth: React.FC = () => {
             if (authError) throw authError;
             if (!authData.user) throw new Error("Erro ao criar usuário.");
 
-            // 2. O PULO DO GATO: Inserir os dados na tabela 'profiles'
-            // Isso conecta o Login aos Dados de Negócio (Gostos, Idade, etc)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert([
-                    {
-                        id: authData.user.id, // O segredo: o ID é o mesmo do Auth
-                        full_name: fullName,
-                        birth_date: birthDate,
-                        music_preferences: selectedGenres,
-                        subscription_status: 'free'
-                    }
-                ]);
+            // Sucesso - O Trigger do banco de dados vai criar o perfil automaticamente
 
-            if (profileError) {
-                console.error("Erro ao criar perfil:", profileError);
-                // Opcional: Deletar o usuário se o perfil falhar, para não ficar "meio cadastro"
-                throw new Error("Erro ao salvar dados do perfil.");
-            }
 
             // Sucesso total
             navigate('/');
