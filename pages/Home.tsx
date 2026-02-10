@@ -24,7 +24,11 @@ import {
     ArrowUpRight,
     Instagram,
     Twitter,
-    Youtube
+    Youtube,
+    User,
+    LogOut,
+    Camera,
+    Loader2
 } from 'lucide-react';
 import { Feature, Plan, Artist } from '../types';
 
@@ -114,6 +118,23 @@ function Home() {
     const [showWaitlistModal, setShowWaitlistModal] = useState(false);
     const [activeEvent, setActiveEvent] = useState<any>(null);
 
+    const [user, setUser] = useState<any>(null);
+    const [loadingAvatar, setLoadingAvatar] = useState(false);
+
+    useEffect(() => {
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
     useEffect(() => {
         const fetchActive = async () => {
             const { data } = await supabase
@@ -125,6 +146,51 @@ function Home() {
         }
         fetchActive();
     }, []);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        window.location.reload(); // Force reload to clear state cleanly
+    };
+
+    const handleAvatarUpdate = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || !user) return;
+        const file = e.target.files[0];
+        setLoadingAvatar(true);
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { avatar_url: data.publicUrl }
+            });
+
+            if (updateError) throw updateError;
+
+            // Refresh user state
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            setUser(newUser);
+            alert('Foto atualizada com sucesso!');
+
+        } catch (error: any) {
+            console.error('Error updating avatar:', error);
+            alert('Erro ao atualizar foto.');
+        } finally {
+            setLoadingAvatar(false);
+        }
+    };
 
     const handleBuyTicket = async () => {
         if (!activeEvent) return;
@@ -297,7 +363,34 @@ function Home() {
                             <div className="flex flex-col gap-4">
                                 <h4 className="font-bold text-xl uppercase tracking-wider mb-2">Global</h4>
                                 <div className="flex items-center gap-2 text-lg font-medium"><Globe size={20} /> <span>Brasil (PT-BR)</span></div>
-                                <button className="flex items-center gap-2 text-lg font-bold hover:underline mt-4">Fale Conosco <ArrowUpRight size={20} /></button>
+
+                                {user ? (
+                                    <div className="flex items-center gap-3 mt-2 pl-1 animate-in fade-in slide-in-from-bottom-2">
+                                        <div className="relative group cursor-pointer w-10 h-10 flex-shrink-0">
+                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brand-dark/20 group-hover:border-brand-dark transition-colors">
+                                                {loadingAvatar ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-brand-dark/10"><Loader2 className="animate-spin w-4 h-4" /></div>
+                                                ) : (
+                                                    <img src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Avatar" className="w-full h-full object-cover" />
+                                                )}
+                                            </div>
+                                            <label htmlFor="footer-avatar-upload" className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+                                                <Camera size={12} className="text-white" />
+                                            </label>
+                                            <input id="footer-avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpdate} disabled={loadingAvatar} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-sm leading-tight max-w-[120px] truncate">{user.user_metadata?.full_name?.split(' ')[0] || 'Usuário'}</span>
+                                            <button onClick={handleLogout} className="text-[10px] font-bold uppercase tracking-wider opacity-60 hover:opacity-100 hover:text-red-900 transition-all text-left flex items-center gap-1">
+                                                <LogOut size={10} /> Sair da conta
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => navigate('/auth')} className="flex items-center gap-2 text-lg font-bold hover:underline mt-4">
+                                        Fale Conosco <ArrowUpRight size={20} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ChatMessage } from './ChatMessage';
 import { Leaderboard, MOCK_DONORS } from './Leaderboard';
+import { DonationModal } from './DonationModal';
 
 // --- MODERATOR SENTINEL RULES ---
 const BLOCK_PATTERNS = [
@@ -229,17 +230,38 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         }
 
         const userMeta = session.user.user_metadata;
+        const tempId = crypto.randomUUID();
         const messageData = {
+            id: tempId,
             content: inputValue,
             user_id: session.user.id,
             room_id: activeTab === 'public' ? null : activeRoomId,
-            user_meta: { name: userMeta.full_name || session.user.email.split('@')[0], avatar: userMeta.avatar_url }
+            user_meta: { name: userMeta.full_name || session.user.email.split('@')[0], avatar: userMeta.avatar_url },
+            created_at: new Date().toISOString(),
+            status: 'PENDING' as const,
+            isMe: true
         };
 
-        setLastMessageTime(now);
+        // Optimistic Update
+        setMessages(prev => [...prev, messageData as Message]);
         setInputValue('');
-        const { error } = await supabase.from('messages').insert([messageData]);
-        if (error) { alert('Erro ao enviar.'); setInputValue(messageData.content); }
+        setTimeout(() => scrollToBottom(true), 50);
+        setLastMessageTime(now);
+
+        const { error } = await supabase.from('messages').insert([{
+            content: messageData.content,
+            user_id: messageData.user_id,
+            room_id: messageData.room_id,
+            user_meta: messageData.user_meta,
+            // Don't send status/id/created_at, let DB handle it. 
+            // We rely on Realtime to replace the pending one, or we can update it here if needed.
+        }]);
+
+        if (error) {
+            alert('Erro ao enviar.');
+            setMessages(prev => prev.filter(m => m.id !== tempId)); // Revert
+            setInputValue(messageData.content);
+        }
     };
 
     const handleCreateRoom = async () => {
@@ -265,52 +287,63 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         if (!jError) { setMyRooms([...myRooms, room]); setActiveRoomId(room.id); setActiveTab('group'); setShowJoinModal(false); }
     };
 
-    // Donation Logic
-    const handleDonateConfirm = async () => {
-        if (!session) return alert('Faça login para doar!');
-        setIsProcessingDonation(true);
+    // Donation Logic (Updated for new Modal)
+    const handleDonateConfirm = async (amount: number, message: string) => {
+        if (!session) return;
+        // setIsProcessingDonation(true); // Handled by Modal now
         const userMeta = session.user.user_metadata;
 
-        // 1. Insert Pending Message
-        const { data: msg, error } = await supabase.from('messages').insert([{
-            content: donationMessage || 'Doação para o canal!',
+        // 1. Insert Pending Message & Optimistic Update
+        const tempId = crypto.randomUUID();
+        const donationMsg = {
+            id: tempId,
+            content: message || 'Doação para o canal!',
             user_id: session.user.id,
             room_id: activeTab === 'public' ? null : activeRoomId,
             user_meta: { name: userMeta.full_name || session.user.email.split('@')[0], avatar: userMeta.avatar_url },
             is_donation: true,
-            donation_amount: selectedAmount,
-            status: 'PENDING'
+            donation_amount: amount,
+            status: 'PENDING' as const,
+            created_at: new Date().toISOString(),
+            isMe: true
+        };
+
+        // Optimistic show (optional, maybe wait for success?) 
+        // For donation, we usually wait for success step. 
+        // But let's show it as pending/processing if we want.
+        // Actually, the modal handles the "Success" state animation. 
+        // Once the modal says success, we should likely see it in chat.
+
+        const { data: msg, error } = await supabase.from('messages').insert([{
+            content: donationMsg.content,
+            user_id: donationMsg.user_id,
+            room_id: donationMsg.room_id,
+            user_meta: donationMsg.user_meta,
+            is_donation: true,
+            donation_amount: amount,
+            status: 'PENDING' // Initially pending
         }]).select().single();
 
         if (error || !msg) {
             console.error(error);
-            alert('Erro ao iniciar doação.');
-            setIsProcessingDonation(false);
-            return;
+            throw new Error('Erro ao iniciar doação.');
         }
 
         // 2. SIMULATION MODE (Bypassing Stripe for Test)
-        try {
-            // Simulate processing time
-            setTimeout(async () => {
-                const { error: updateError } = await supabase
-                    .from('messages')
-                    .update({ status: 'CONFIRMED' })
-                    .eq('id', msg.id);
+        // Wait a bit then confirm
+        await new Promise(r => setTimeout(r, 1000));
 
-                if (updateError) {
-                    alert('Erro ao confirmar doação simulada.');
-                } else {
-                    setShowDonationModal(false);
-                    setDonationMessage('');
-                }
-                setIsProcessingDonation(false);
-            }, 1500);
+        const { error: updateError } = await supabase
+            .from('messages')
+            .update({ status: 'CONFIRMED' })
+            .eq('id', msg.id);
 
-        } catch (e) {
-            alert('Erro de conexão.');
-            setIsProcessingDonation(false);
-        }
+        if (updateError) throw new Error('Erro ao confirmar.');
+
+        // Optimistic add to chat now that it is confirmed
+        // Realtime will likely catch it too, but this makes it instant after modal success.
+        setMessages(prev => [...prev, { ...donationMsg, id: msg.id, status: 'CONFIRMED' } as Message]);
+        setTimeout(() => scrollToBottom(true), 50);
     };
 
     // Pinned Messages logic:
@@ -474,55 +507,12 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                         )}
 
                         {/* Donation Modal */}
-                        {showDonationModal && (
-                            <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                                <div className="bg-slate-900 w-full max-w-xs rounded-3xl border border-emerald-500/30 shadow-2xl overflow-hidden flex flex-col">
-                                    <div className="bg-emerald-500/10 p-4 border-b border-emerald-500/20 text-center relative">
-                                        <button onClick={() => setShowDonationModal(false)} className="absolute top-2 right-2 text-slate-400 hover:text-white"><X size={20} /></button>
-                                        <Banknote size={32} className="mx-auto text-emerald-400 mb-2" />
-                                        <h3 className="text-white font-bold text-lg">Super Chat</h3>
-                                        <p className="text-emerald-300 text-xs">Destaque sua mensagem!</p>
-                                    </div>
-                                    <div className="p-4 space-y-4">
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {[5, 10, 20, 50].map(val => (
-                                                <button
-                                                    key={val}
-                                                    onClick={() => setSelectedAmount(val)}
-                                                    className={cn("py-2 px-1 rounded-xl text-sm font-bold border transition-all", selectedAmount === val ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-slate-800 text-slate-400 border-slate-700 hover:border-emerald-500/50")}
-                                                >
-                                                    R${val}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="bg-slate-950/50 p-3 rounded-xl border border-emerald-500/20">
-                                            <span className={cn("text-xs font-bold mb-1 block", selectedAmount >= 50 ? "text-amber-400" : (selectedAmount >= 10 ? "text-pink-400" : "text-emerald-400"))}>
-                                                {selectedAmount >= 50 ? "Dourado + Pin 10min" : (selectedAmount >= 10 ? "Destacado + Pin 2min" : "Borda Colorida")}
-                                            </span>
-                                            <textarea
-                                                value={donationMessage}
-                                                onChange={e => setDonationMessage(e.target.value.slice(0, 200))}
-                                                placeholder="Sua mensagem de apoio..."
-                                                className="w-full bg-transparent text-white text-sm focus:outline-none resize-none h-16"
-                                            />
-                                            <div className="text-right text-[10px] text-slate-500">{donationMessage.length}/200</div>
-                                        </div>
-                                        <button
-                                            onClick={handleDonateConfirm}
-                                            disabled={isProcessingDonation}
-                                            className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-wait"
-                                        >
-                                            {isProcessingDonation ? "Processando..." : (
-                                                <>
-                                                    <CreditCard size={18} />
-                                                    Pagar R$ {selectedAmount},00
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <DonationModal
+                            isOpen={showDonationModal}
+                            onClose={() => setShowDonationModal(false)}
+                            onConfirm={handleDonateConfirm}
+                            user={session?.user}
+                        />
                     </>
                 )}
             </div>

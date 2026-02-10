@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Calendar, Music, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Calendar, Music, ArrowRight, Loader2, Camera } from 'lucide-react';
 
 const Auth: React.FC = () => {
     const navigate = useNavigate();
@@ -17,6 +17,8 @@ const Auth: React.FC = () => {
     const [fullName, setFullName] = useState('');
     const [birthDate, setBirthDate] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     const genres = ["Funk", "Trap", "Rap", "Eletrônica", "Pop", "Sertanejo", "Rock", "Pagode"];
 
@@ -25,6 +27,38 @@ const Auth: React.FC = () => {
             setSelectedGenres(selectedGenres.filter(g => g !== genre));
         } else {
             setSelectedGenres([...selectedGenres, genre]);
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const uploadAvatar = async (userId: string): Promise<string | null> => {
+        if (!avatarFile) return null;
+        try {
+            const fileExt = avatarFile.name.split('.').pop();
+            const fileName = `${userId}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, avatarFile);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            return data.publicUrl;
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            return null;
         }
     };
 
@@ -57,7 +91,24 @@ const Auth: React.FC = () => {
         setError(null);
 
         try {
-            // 1. Criar o usuário no Sistema de Autenticação
+            // 1. Generate a temporary ID or use email for initial avatar check (optional, but cleaner to allow system to generate ID)
+            // But we can just upload first or after. 
+            // Better flow: Signup -> Get User ID -> Upload Avatar -> Update User
+            // OR: Upload with random name -> Signup with URL. Let's do Upload with random/email prefix.
+
+            let uploadedAvatarUrl = null;
+            if (avatarFile) {
+                // Use a temporary name, we can clean up later or just use timestamp
+                // Actually, we can't upload without being authenticated usually if RLS is strict,
+                // BUT my RLS "Anyone can upload an avatar" allows it.
+                // If RLS requires auth, we must signup first.
+                // Let's assume the RLS allows public uploads for now or we signup first.
+                // If we signup first, we need to update the user immediately after.
+            }
+
+            // Strategy: Signup first (to get Auth), then upload, then update profile.
+            // This is safer for RLS "authenticated users only".
+
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
@@ -66,6 +117,7 @@ const Auth: React.FC = () => {
                         full_name: fullName,
                         birth_date: birthDate,
                         music_preferences: selectedGenres,
+                        // Default avatar initially
                         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
                     }
                 }
@@ -74,10 +126,18 @@ const Auth: React.FC = () => {
             if (authError) throw authError;
             if (!authData.user) throw new Error("Erro ao criar usuário.");
 
-            // Sucesso - O Trigger do banco de dados vai criar o perfil automaticamente
+            // 2. Upload Avatar if selected
+            if (avatarFile && authData.user) {
+                const publicUrl = await uploadAvatar(authData.user.id);
+                if (publicUrl) {
+                    // 3. Update user metadata with real avatar
+                    const { error: updateError } = await supabase.auth.updateUser({
+                        data: { avatar_url: publicUrl }
+                    });
+                    if (updateError) console.error("Error updating avatar:", updateError);
+                }
+            }
 
-
-            // Sucesso total
             navigate('/');
 
         } catch (err: any) {
@@ -136,6 +196,30 @@ const Auth: React.FC = () => {
 
                     {!isLogin && (
                         <>
+                            {/* Avatar Upload */}
+                            <div className="flex flex-col items-center mb-4">
+                                <div className="relative group cursor-pointer">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/10 group-hover:border-brand-primary transition-all bg-black/40 flex items-center justify-center">
+                                        {avatarPreview ? (
+                                            <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User size={40} className="text-white/30" />
+                                        )}
+                                    </div>
+                                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-brand-primary text-brand-dark p-2 rounded-full cursor-pointer hover:bg-white transition-colors shadow-lg">
+                                        <Camera size={16} />
+                                    </label>
+                                    <input
+                                        id="avatar-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
+                                <span className="text-xs text-white/50 mt-2">Adicionar foto de perfil</span>
+                            </div>
+
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1">Nome Completo</label>
                                 <div className="relative">

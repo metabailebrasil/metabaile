@@ -28,18 +28,18 @@ interface MessageProps {
     };
 }
 
-export const ChatMessage: React.FC<MessageProps> = ({ msg }) => {
+export const ChatMessage = React.memo(({ msg }: MessageProps) => {
     const isSuper = msg.is_donation && msg.status === 'CONFIRMED';
     const amount = msg.donation_amount || 0;
-    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Removed time calculation if not used, or keep if needed later.
 
     // --- STANDARD MESSAGE (YouTube/Twitch Compact Style) ---
     if (!isSuper) {
         return (
             <motion.div
-                layout
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
                 className={cn(
                     "group relative pl-2 pr-2 py-0.5 transition-colors rounded hover:bg-white/[0.02] flex items-baseline gap-1.5 mb-0.5"
                 )}
@@ -49,6 +49,7 @@ export const ChatMessage: React.FC<MessageProps> = ({ msg }) => {
                     src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`}
                     className="w-5 h-5 rounded-full bg-slate-800 object-cover self-center opacity-70 group-hover:opacity-100 transition-opacity"
                     alt="Avatar"
+                    loading="lazy"
                 />
 
                 {/* Name */}
@@ -136,6 +137,7 @@ export const ChatMessage: React.FC<MessageProps> = ({ msg }) => {
                         src={msg.user_meta?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`}
                         className={cn("w-10 h-10 rounded-full relative z-10 border-2 object-cover", `border-${tier.color}-500`)}
                         alt="Avatar"
+                        loading="lazy"
                     />
                     {amount >= 50 && (
                         <div className="absolute -top-2 -right-1 z-20">
@@ -171,4 +173,4 @@ export const ChatMessage: React.FC<MessageProps> = ({ msg }) => {
             <div className={cn("absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-screen", tier.bgGradient)}></div>
         </motion.div>
     );
-};
+}, (prev, next) => prev.msg.id === next.msg.id && prev.msg.status === next.msg.status);
