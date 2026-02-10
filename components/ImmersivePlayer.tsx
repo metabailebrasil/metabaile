@@ -14,6 +14,14 @@ import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { LIVE_STREAM_VIDEO_ID } from '../constants';
 
+const extractVideoId = (url: string) => {
+    if (!url) return LIVE_STREAM_VIDEO_ID;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : url;
+};
+
+
 const ImmersivePlayer: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
@@ -62,11 +70,11 @@ const ImmersivePlayer: React.FC = () => {
                 .eq('status', 'active')
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (eventData && eventData.stream_url) {
                 console.log("▶ Playing Active Event Stream:", eventData.stream_url);
-                setVideoId(eventData.stream_url);
+                setVideoId(extractVideoId(eventData.stream_url));
                 return;
             }
 
@@ -82,7 +90,7 @@ const ImmersivePlayer: React.FC = () => {
                 const randomIndex = Math.floor(Math.random() * playlistData.length);
                 const randomVideo = playlistData[randomIndex];
                 console.log("▶ Playing Playlist Video:", randomVideo.video_id);
-                setVideoId(randomVideo.video_id);
+                setVideoId(extractVideoId(randomVideo.video_id));
             } else {
                 // 3. Last resort fallback
                 setVideoId(LIVE_STREAM_VIDEO_ID);
@@ -96,7 +104,7 @@ const ImmersivePlayer: React.FC = () => {
             .channel('public:events')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events' }, (payload) => {
                 if (payload.new && payload.new.status === 'active' && payload.new.stream_url) {
-                    setVideoId(payload.new.stream_url); // Switch to live immediately
+                    setVideoId(extractVideoId(payload.new.stream_url)); // Switch to live immediately
                 } else if (payload.new && payload.new.status !== 'active') {
                     // Event ended? Reload config to get playlist (basic refresh)
                     fetchConfig();

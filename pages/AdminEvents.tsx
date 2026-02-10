@@ -12,6 +12,13 @@ interface Event {
     stream_url?: string;
 }
 
+const extractVideoId = (url: string) => {
+    if (!url) return '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : url;
+};
+
 const AdminEvents: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -65,7 +72,7 @@ const AdminEvents: React.FC = () => {
                 status: 'draft',
                 show_date_start: selectedDate.toISOString(),
                 access_expires_at: closingDate.toISOString(),
-                stream_url: newEventStreamUrl.trim() || null
+                stream_url: extractVideoId(newEventStreamUrl.trim()) || null
             }
         ]);
 
@@ -82,7 +89,7 @@ const AdminEvents: React.FC = () => {
     };
 
     const handleUpdateStreamUrl = async (id: string, url: string) => {
-        const { error } = await supabase.from('events').update({ stream_url: url }).eq('id', id);
+        const { error } = await supabase.from('events').update({ stream_url: extractVideoId(url) }).eq('id', id);
         if (error) {
             alert('Erro ao atualizar link');
         } else {
@@ -140,7 +147,7 @@ const AdminEvents: React.FC = () => {
     const handleAddVideo = async (e: React.FormEvent) => {
         e.preventDefault();
         const { error } = await supabase.from('playlist').insert([{
-            video_id: newVideoId,
+            video_id: extractVideoId(newVideoId),
             title: newVideoTitle
         }]);
         if (error) {
