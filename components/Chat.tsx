@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { Send, Users, MessageSquare, Plus, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote, AlertTriangle, X, CreditCard } from 'lucide-react';
+import { Send, Users, MessageSquare, Plus, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote, AlertTriangle, X, CreditCard, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -94,6 +94,49 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     const [isCopied, setIsCopied] = useState(false);
     const [warning, setWarning] = useState<string | null>(null);
 
+    // Auto-join from URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const inviteRoomId = params.get('joinRoom');
+        if (inviteRoomId) {
+            setJoinRoomId(inviteRoomId);
+            setShowJoinModal(true);
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []);
+
+    const [isShareCopied, setIsShareCopied] = useState(false);
+
+    const handleShareRoom = () => {
+        if (!activeRoomId) return;
+        const link = `${window.location.origin}/?joinRoom=${activeRoomId}`;
+        navigator.clipboard.writeText(link);
+        setIsShareCopied(true);
+        setTimeout(() => setIsShareCopied(false), 2000);
+        setTimeout(() => setIsShareCopied(false), 2000);
+    };
+
+    const handleDeleteRoom = async (roomId: string) => {
+        if (!session) return;
+        if (!confirm('Tem certeza que deseja excluir esta sala permanentemente?')) return;
+
+        const { error } = await supabase.from('chat_rooms').delete().eq('id', roomId).eq('created_by', session.user.id);
+
+        if (error) {
+            alert('Erro ao excluir sala: ' + error.message);
+        } else {
+            setMyRooms(prev => prev.filter(r => r.id !== roomId));
+            if (activeRoomId === roomId) {
+                setActiveRoomId(null);
+                const remaining = myRooms.filter(r => r.id !== roomId);
+                if (remaining.length > 0) setActiveRoomId(remaining[0].id);
+                else setActiveTab('public');
+            }
+        }
+    };
+
+
+
 
 
     const virtuosoRef = useRef<VirtuosoHandle>(null);
@@ -106,9 +149,9 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const scrollToBottom = (smooth = true) => {
-        virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, behavior: smooth ? 'smooth' : 'auto' });
-        // State updates handled by Virtuoso callbacks now
+    const scrollToBottom = (smooth = true, targetIndex = -1) => {
+        const index = targetIndex >= 0 ? targetIndex : messages.length - 1;
+        virtuosoRef.current?.scrollToIndex({ index, behavior: smooth ? 'smooth' : 'auto' });
     };
 
     // Removed manual handleScroll, handled by Virtuoso
@@ -172,7 +215,8 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                     .filter(m => !m.is_donation || m.status === 'CONFIRMED')
                     .map(msg => ({ ...msg, isMe: session?.user?.id === msg.user_id }));
                 setMessages(loaded);
-                setTimeout(() => scrollToBottom(false), 100);
+                // Pass loaded.length - 1 to ensure we scroll to the actual last item of the NEW list
+                setTimeout(() => scrollToBottom(false, loaded.length - 1), 100);
             }
         };
 
@@ -260,6 +304,13 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
     const handleCreateRoom = async () => {
         if (!newRoomName.trim() || !session) return;
+
+        // 1-Room Limit Check
+        const existingOwnRoom = myRooms.find(r => r.created_by === session.user.id);
+        if (existingOwnRoom) {
+            return alert("Você já possui uma sala criada. Exclua a atual para criar uma nova.");
+        }
+
         const { data: room, error } = await supabase.from('chat_rooms').insert([{ name: newRoomName, emoji: '🎵', password: newRoomPass || null, created_by: session.user.id }]).select().single();
         if (error) return alert(error.message);
         await supabase.from('room_members').insert([{ room_id: room.id, user_id: session.user.id }]);
@@ -446,9 +497,25 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                 {/* ... existing group buttons ... */}
                                 <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1 text-xs font-bold"><Plus size={14} /> Nova</button>
                                 <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800/50 text-slate-400 border border-white/10 flex items-center gap-1 text-xs font-bold"><Hash size={14} /> Entrar</button>
+                                {activeRoomId && (
+                                    <button onClick={handleShareRoom} disabled={isShareCopied} className={cn("flex-shrink-0 px-3 py-1 rounded-full border flex items-center gap-1 text-xs font-bold transition-all duration-300 transform", isShareCopied ? "bg-green-500/20 text-green-400 border-green-500/50 w-24 justify-center" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95")}>
+                                        {isShareCopied ? <Check size={14} /> : <LinkIcon size={14} />}
+                                        {isShareCopied ? "Copiado!" : "Convidar"}
+                                    </button>
+                                )}
+
                                 <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
                                 {myRooms.map(room => (
-                                    <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={cn("px-3 py-1 rounded-full text-xs font-bold border transition-all whitespace-nowrap", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>{room.emoji} {room.name}</button>
+                                    <div key={room.id} className={cn("flex items-center rounded-full border transition-all whitespace-nowrap pr-1 flex-shrink-0", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>
+                                        <button onClick={() => setActiveRoomId(room.id)} className="px-3 py-1 text-xs font-bold flex items-center gap-1">
+                                            {room.emoji} {room.name}
+                                        </button>
+                                        {/* DEBUG: Always show button for testing */}
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRoom(room.id); }} className={cn("p-1 rounded-full hover:bg-white/20 transition-colors", "text-red-400")}>
+                                            <Trash2 size={14} />
+                                        </button>
+                                        {/* Original check was: {room.created_by === session?.user?.id && ...} */}
+                                    </div>
                                 ))}
                             </div>
                         )}

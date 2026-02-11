@@ -251,7 +251,7 @@ function Home() {
                     </div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-none tracking-tighter mb-6 text-brand-dark drop-shadow-sm uppercase">
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-dark to-brand-primary animate-pulse-slow bg-[length:200%_auto]">
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-dark to-brand-primary animate-pulse-slow bg-[length:200%_auto] pb-4">
                             {HERO_CONTENT.tagline}
                         </span>
                     </h1>
