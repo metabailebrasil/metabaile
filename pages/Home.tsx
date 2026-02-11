@@ -233,8 +233,8 @@ function Home() {
             {/* Global Fixed Background */}
             <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/20 via-brand-light to-brand-light">
-                    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-brand-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
-                    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-brand-secondary/10 rounded-full blur-[120px] animate-float" />
+                    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-brand-primary/10 rounded-full blur-[60px]" />
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-brand-secondary/5 rounded-full blur-[60px]" />
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
                 </div>
             </div>
@@ -349,7 +349,7 @@ function Home() {
                     <div className="grid md:grid-cols-12 gap-12 items-start">
                         <div className="md:col-span-5 space-y-6">
                             <p className="text-xl md:text-2xl font-medium leading-snug max-w-xl">Nossa missão é simples: Democratizamos grandes shows e eventos exclusivos com uma experiência imersiva. O palco agora é de todos.</p>
-                            <p className="text-sm font-bold uppercase tracking-wider opacity-60">© 2025 {APP_NAME} Experience</p>
+                            <p className="text-sm font-bold uppercase tracking-wider opacity-60">© 2026 {APP_NAME} Experience</p>
                         </div>
                         <div className="md:col-span-7 flex flex-col md:flex-row justify-end gap-16">
                             <div className="flex flex-col gap-4">

@@ -54,6 +54,7 @@
       color: #0f172a;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+      cursor: url('/cursor.png?v=1') 16 16, auto;
     }
 
     /* Apple-style Soft UI / Glassmorphism */
@@ -76,6 +77,7 @@
     .text-gradient {
       background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
       /* Dark gradient for crisp text */
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -111,6 +113,32 @@
       scrollbar-width: none;
     }
   </style>
+  <script>
+      (function () {
+        const img = new Image();
+        img.src = '/cursor.png?v=1';
+        img.onload = function () {
+          if (img.width > 128 || img.height > 128) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 32, 32);
+            const dataUrl = canvas.toDataURL('image/png');
+            const style = document.createElement('style');
+            style.innerHTML = `
+              body, button, a {
+                cursor: url('${dataUrl}') 8 8, auto !important;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+        };
+        img.onerror = function () {
+          console.warn('Failed to load custom cursor image');
+        };
+      })();
+  </script>
 </head>
 
 <body>

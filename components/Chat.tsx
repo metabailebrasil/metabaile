@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Send, Users, MessageSquare, Plus, Hash, Copy, ArrowDown, Shield, Star, Crown, Check, Banknote, AlertTriangle, X, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -93,8 +94,10 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     const [isCopied, setIsCopied] = useState(false);
     const [warning, setWarning] = useState<string | null>(null);
 
-    const messagesContainerRef = useRef<HTMLDivElement>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+
+    const virtuosoRef = useRef<VirtuosoHandle>(null);
+    // Removed old refs: messagesContainerRef, messagesEndRef
 
     const handleCopyRoomId = () => {
         if (!activeRoomId) return;
@@ -104,20 +107,11 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     };
 
     const scrollToBottom = (smooth = true) => {
-        if (messagesContainerRef.current) {
-            const { scrollHeight, clientHeight } = messagesContainerRef.current;
-            messagesContainerRef.current.scrollTo({ top: scrollHeight - clientHeight, behavior: smooth ? 'smooth' : 'auto' });
-            setHasNewMessages(false);
-            setIsScrolledNearBottom(true);
-        }
+        virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, behavior: smooth ? 'smooth' : 'auto' });
+        // State updates handled by Virtuoso callbacks now
     };
 
-    const handleScroll = () => {
-        if (!messagesContainerRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-        setIsScrolledNearBottom(scrollHeight - scrollTop - clientHeight < 100);
-        if (scrollHeight - scrollTop - clientHeight < 100) setHasNewMessages(false);
-    };
+    // Removed manual handleScroll, handled by Virtuoso
 
     // Timer Logic
     useEffect(() => {
@@ -460,23 +454,43 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                         )}
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-y-auto py-2 space-y-1 scrollbar-hide overflow-x-hidden relative" ref={messagesContainerRef} onScroll={handleScroll}>
-                            {activeTab === 'group' && myRooms.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80"><Users size={32} className="text-sky-400 mb-4" /><h3 className="text-white font-bold">Resenha Privada</h3><p className="text-slate-400 text-sm mb-4">Crie uma sala para seus amigos.</p><button onClick={() => setShowCreateModal(true)} className="px-6 py-2 bg-sky-500 text-white font-bold rounded-full">Criar Sala</button></div>
-                            ) : (
-                                <>
-                                    <AnimatePresence initial={false}>
-                                        {messages.map((msg) => (
-                                            <ChatMessage key={msg.id} msg={msg} />
-                                        ))}
-                                    </AnimatePresence>
-                                    <div ref={messagesEndRef} />
-                                    {!isScrolledNearBottom && hasNewMessages && (
-                                        <button onClick={() => scrollToBottom(true)} className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2"><ArrowDown size={14} /> Novas mensagens</button>
-                                    )}
-                                </>
-                            )}
-                        </div>
+                        {activeTab === 'group' && myRooms.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80"><Users size={32} className="text-sky-400 mb-4" /><h3 className="text-white font-bold">Resenha Privada</h3><p className="text-slate-400 text-sm mb-4">Crie uma sala para seus amigos.</p><button onClick={() => setShowCreateModal(true)} className="px-6 py-2 bg-sky-500 text-white font-bold rounded-full">Criar Sala</button></div>
+                        ) : (
+                            <>
+                                <Virtuoso
+                                    ref={virtuosoRef}
+                                    style={{ height: '100%' }}
+                                    data={messages}
+                                    itemContent={(index, msg) => <ChatMessage key={msg.id} msg={msg} />}
+                                    followOutput={(isAtBottom) => {
+                                        if (isAtBottom) {
+                                            setHasNewMessages(false);
+                                            setIsScrolledNearBottom(true);
+                                            return 'smooth';
+                                        }
+                                        // Start "new messages" only if not at bottom
+                                        if (!isScrolledNearBottom) setHasNewMessages(true);
+                                        return false;
+                                    }}
+                                    atBottomStateChange={(atBottom) => {
+                                        setIsScrolledNearBottom(atBottom);
+                                        if (atBottom) setHasNewMessages(false);
+                                    }}
+                                    initialTopMostItemIndex={messages.length - 1} // Start at bottom
+                                />
+
+                                {!isScrolledNearBottom && hasNewMessages && (
+                                    <button
+                                        onClick={() => virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, behavior: 'smooth' })}
+                                        className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 z-20 animate-bounce"
+                                    >
+                                        <ArrowDown size={14} /> Novas mensagens
+                                    </button>
+                                )}
+                            </>
+                        )}
+
 
                         {/* Input */}
                         {session ? (
@@ -516,7 +530,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                     </>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 export default Chat;
