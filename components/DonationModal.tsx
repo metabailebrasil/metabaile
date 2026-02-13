@@ -74,13 +74,10 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose, o
                         <button onClick={() => setStep('amount')} className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors z-20 text-[10px] font-bold uppercase tracking-widest hover:underline">VOLTAR</button>
                     )}
 
-                    {/* Icon & Title */}
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center shadow-lg shadow-sky-500/20 mb-2 rotate-3 ring-4 ring-black/20">
-                            <Sparkles size={24} className="text-white drop-shadow-md" />
-                        </div>
-                        <h3 className="text-white font-black text-xl tracking-tight uppercase">Destaque</h3>
-                        <p className="text-sky-300/80 text-[10px] font-medium tracking-wider uppercase mt-0.5">Sua mensagem no topo</p>
+                    {/* Title Only - Cleaner Aesthetic */}
+                    <div className="relative z-10 flex flex-col items-center pt-2">
+                        <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-200 to-white font-black text-2xl tracking-tighter uppercase drop-shadow-sm">Destaque</h3>
+                        <p className="text-slate-400 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">Sua mensagem no topo</p>
                     </div>
                 </div>
 
