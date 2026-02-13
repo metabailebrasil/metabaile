@@ -245,10 +245,9 @@ function Home() {
             {/* --- 1. HERO SECTION (Full Screen - No Buttons) --- */}
             <section className="relative h-screen w-full flex items-center justify-center overflow-hidden z-10">
                 <div className="relative z-10 max-w-5xl mx-auto px-4 text-center mt-[-5vh]">
-                    <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md border border-brand-primary/30 px-4 py-1.5 rounded-full mb-8 animate-float shadow-lg shadow-brand-primary/20">
-                        <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#A7D3FF]"></span>
-                        <span className="text-brand-dark text-xs font-bold tracking-widest uppercase">METAVERSO • FUNK • TRAP</span>
-                    </div>
+                    <h2 className="text-2xl md:text-4xl font-display font-black tracking-[0.2em] text-white mb-8 drop-shadow-lg animate-float uppercase">
+                        METABAILE
+                    </h2>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-none tracking-tighter mb-6 text-brand-dark drop-shadow-sm uppercase">
                         <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-dark to-brand-primary animate-pulse-slow bg-[length:200%_auto] pb-4">

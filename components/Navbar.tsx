@@ -14,9 +14,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center">
-            <span className="font-display font-bold text-2xl tracking-tight text-white">
-              {APP_NAME}
-            </span>
+            {/* Logo removed as per user request */}
           </div>
 
           {/* Desktop Nav */}
