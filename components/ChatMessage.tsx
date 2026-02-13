@@ -70,7 +70,7 @@ export const ChatMessage = React.memo(({ msg }: MessageProps) => {
 
                 {/* Content */}
                 <span className={cn(
-                    "text-[13px] leading-5 break-words font-medium text-slate-300 group-hover:text-slate-200 transition-colors"
+                    "text-[13px] leading-5 break-words font-medium text-slate-300 group-hover:text-slate-200 transition-colors inline-block"
                 )}>
                     {msg.content}
                 </span>

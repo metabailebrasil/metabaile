@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const AdminEvents = React.lazy(() => import('./pages/AdminEvents'));
@@ -20,7 +21,9 @@ function App() {
                <Route path="/" element={<Home />} />
                <Route path="/auth" element={<Auth />} />
                <Route path="/test-chat" element={<TestChat />} />
-               <Route path="/admin" element={<AdminEvents />} />
+               <Route element={<ProtectedRoute allowedEmail="andinho@hotmail.com" />}>
+                  <Route path="/admin" element={<AdminEvents />} />
+               </Route>
             </Routes>
          </React.Suspense>
       </Router>

@@ -405,50 +405,96 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
     });
 
     return (
-        <div className={cn("bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-500/20 flex flex-col overflow-hidden font-sans h-full", className)}>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-sky-500/10 via-transparent to-transparent pointer-events-none"></div>
+        <div className={cn("bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 flex flex-col overflow-hidden font-sans h-full", className)}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-sky-500/05 via-transparent to-transparent pointer-events-none"></div>
 
 
 
             {/* MAIN HEADER & TABS */}
-            <div className="p-3 bg-transparent border-b border-white/5 flex flex-col gap-3 z-10 relative">
+            <div className="p-3 bg-gradient-to-b from-slate-900/50 to-transparent border-b border-white/5 flex flex-col gap-2 z-10 relative">
 
                 {/* Main Tabs (Chat vs Ranking) */}
-                <div className="flex bg-black/40 rounded-xl p-1 gap-1 border border-white/5 w-full">
+                <div className="flex bg-slate-950/40 rounded-2xl p-1.5 gap-2 border border-white/5 w-full items-center justify-between backdrop-blur-sm">
                     <button
                         onClick={() => setViewMode('chat')}
                         className={cn(
-                            "flex-1 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
-                            viewMode === 'chat' ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                            "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 relative overflow-hidden group",
+                            viewMode === 'chat'
+                                ? "bg-slate-800 text-white shadow-lg ring-1 ring-white/10"
+                                : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                         )}
                     >
-                        <MessageSquare size={16} /> Chat
+                        {viewMode === 'chat' && (
+                            <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/10 to-transparent opacity-50"></div>
+                        )}
+                        <MessageSquare size={16} className={cn("transition-transform group-active:scale-90", viewMode === 'chat' ? "text-sky-400" : "")} />
+                        <span className="tracking-wide">CHAT</span>
                     </button>
                     <button
                         onClick={() => setViewMode('ranking')}
                         className={cn(
-                            "flex-1 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
-                            viewMode === 'ranking' ? "bg-yellow-600/20 text-yellow-400 border border-yellow-500/20 shadow-sm" : "text-slate-500 hover:text-slate-300"
+                            "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 relative overflow-hidden group",
+                            viewMode === 'ranking'
+                                ? "bg-amber-950/40 text-amber-200 shadow-lg ring-1 ring-amber-500/20"
+                                : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                         )}
                     >
-                        <Crown size={16} /> Ranking
+                        {viewMode === 'ranking' && (
+                            <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-50"></div>
+                        )}
+                        <Crown size={16} className={cn("transition-transform group-active:scale-90", viewMode === 'ranking' ? "text-amber-400" : "")} />
+                        <span className="tracking-wide">RANKING</span>
                     </button>
                 </div>
 
-                {/* Sub-Tabs (Only visible in Chat mode) */}
+                {/* Sub-Tabs (Geral vs Resenha) */}
                 {viewMode === 'chat' && (
-                    <div className="flex justify-between items-center">
-                        <div className="flex gap-4 px-2">
-                            <button onClick={() => setActiveTab('public')} className={cn("text-sm font-bold transition-colors relative", activeTab === 'public' ? "text-white" : "text-slate-500")}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex bg-black/20 rounded-xl p-1 border border-white/5 flex-1 relative backdrop-blur-md">
+                            {/* Animated Pill Background */}
+                            <div className={cn(
+                                "absolute top-1 bottom-1 w-[calc(50%-4px)] bg-sky-600 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-md shadow-sky-900/20",
+                                activeTab === 'public' ? "left-1" : "left-[calc(50%)]"
+                            )}>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg"></div>
+                            </div>
+
+                            <button
+                                onClick={() => setActiveTab('public')}
+                                className={cn(
+                                    "flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors relative z-10 flex items-center justify-center",
+                                    activeTab === 'public' ? "text-white" : "text-slate-500 hover:text-slate-300"
+                                )}
+                            >
                                 Geral
-                                {activeTab === 'public' && <motion.div layoutId="underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-sky-500 rounded-full" />}
                             </button>
-                            <button onClick={() => setActiveTab('group')} className={cn("text-sm font-bold transition-colors relative", activeTab === 'group' ? "text-white" : "text-slate-500")}>
+                            <button
+                                onClick={() => setActiveTab('group')}
+                                className={cn(
+                                    "flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors relative z-10 flex items-center justify-center",
+                                    activeTab === 'group' ? "text-white" : "text-slate-500 hover:text-slate-300"
+                                )}
+                            >
                                 Resenha
-                                {activeTab === 'group' && <motion.div layoutId="underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-sky-500 rounded-full" />}
                             </button>
                         </div>
-                        {activeTab === 'group' && timeLeft && <span className="text-xs font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded ml-auto">{timeLeft}</span>}
+
+                        {/* Countdown Timer (Only shows if active) */}
+                        <AnimatePresence>
+                            {activeTab === 'group' && timeLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, width: 0 }}
+                                    animate={{ opacity: 1, scale: 1, width: 'auto' }}
+                                    exit={{ opacity: 0, scale: 0.9, width: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <span className="text-[10px] font-mono font-bold bg-red-500/10 text-red-300 px-3 py-1.5 rounded-lg border border-red-500/20 shrink-0 whitespace-nowrap flex items-center gap-1.5 shadow-sm">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                        {timeLeft}
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 )}
 
@@ -561,18 +607,25 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
                         {/* Input */}
                         {session ? (
-                            <div className="p-4 bg-slate-900/40 border-t border-sky-500/10 backdrop-blur-sm relative">
-                                {warning && <div className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 text-xs"><AlertTriangle size={14} />{warning}</div>}
+                            <div className="p-4 bg-gradient-to-t from-slate-900/90 to-transparent border-t border-white/5 relative z-20">
+                                {warning && <div className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 text-xs shadow-lg"><AlertTriangle size={14} />{warning}</div>}
                                 <div className="relative group">
-                                    <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder={activeTab === 'public' ? "Comente na live..." : "Mensagem privada..."} className="w-full bg-slate-950/50 text-white placeholder-slate-500 text-sm rounded-full py-3.5 pl-5 pr-24 border border-sky-500/20 focus:outline-none focus:border-sky-500/50 focus:ring-1 transition-all shadow-inner" />
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                        <button onClick={() => setShowDonationModal(true)} className="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 transform active:scale-95"><Banknote size={18} /></button>
-                                        <button onClick={handleSendMessage} disabled={!inputValue.trim()} className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 transform active:scale-95"><Send size={18} /></button>
+                                    <input
+                                        type="text"
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        placeholder={activeTab === 'public' ? "Comente na live..." : "Mensagem privada..."}
+                                        className="w-full bg-black/20 text-white placeholder-slate-400 text-sm rounded-2xl py-3.5 pl-5 pr-24 border border-white/10 focus:outline-none focus:border-white/20 focus:bg-black/40 focus:ring-1 focus:ring-white/10 transition-all shadow-sm backdrop-blur-sm"
+                                    />
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                                        <button onClick={() => setShowDonationModal(true)} className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 transform active:scale-95"><Banknote size={16} /></button>
+                                        <button onClick={handleSendMessage} disabled={!inputValue.trim()} className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 transform active:scale-95"><Send size={16} /></button>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-6 text-center"><button onClick={() => window.location.href = '/auth'} className="px-6 py-2.5 bg-sky-500 text-white font-bold rounded-full hover:bg-sky-400 shadow-lg">Entrar no Chat</button></div>
+                            <div className="p-6 text-center bg-gradient-to-t from-slate-900/80 to-transparent"><button onClick={() => window.location.href = '/auth'} className="px-8 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-400 shadow-xl shadow-sky-500/20 transition-all transform active:scale-95 text-sm uppercase tracking-wide">Entrar no Chat</button></div>
                         )}
 
                         {/* Modals */}

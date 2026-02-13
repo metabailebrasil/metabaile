@@ -134,7 +134,13 @@ const Auth: React.FC = () => {
                     const { error: updateError } = await supabase.auth.updateUser({
                         data: { avatar_url: publicUrl }
                     });
-                    if (updateError) console.error("Error updating avatar:", updateError);
+                    if (updateError) {
+                        console.error("Error updating avatar:", updateError);
+                        setError("Erro ao atualizar foto de perfil. Tente novamente mais tarde.");
+                    }
+                } else {
+                    setError("Erro ao fazer upload da foto. Verifique sua conexão ou tente uma imagem menor.");
+                    // Allow login anyway, but warn
                 }
             }
 

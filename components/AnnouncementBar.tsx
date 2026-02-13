@@ -4,7 +4,7 @@ const AnnouncementBar: React.FC = () => {
     const messages = [
         "INGRESSOS À VENDA",
         "PROJETO EM CONSTRUÇÃO",
-        "LINE-UP COMPLETO",
+        "A REVOLUÇÃO DO AO VIVO ESTÁ POR VIM",
         "EXPERIÊNCIA IMERSIVA",
         "GARANTA SEU LUGAR",
         "METABAILE 2026"
