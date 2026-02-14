@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@config "./tailwind.config.js";
+
+@layer base {
+    body {
+        @apply bg-brand-light text-brand-dark overflow-x-hidden antialiased;
+        cursor: url('/cursor.png?v=1') 16 16, auto;
+    }
+}
+
+@layer components {
+
+    /* Apple-style Soft UI / Glassmorphism */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px rgba(167, 211, 255, 0.15);
+    }
+
+    .glass-panel-strong {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 20px 40px rgba(167, 211, 255, 0.2);
+    }
+}
+
+@layer utilities {
+    .text-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .bg-gradient-brand {
+        background: linear-gradient(135deg, #A7D3FF 0%, #82C0FF 100%);
+    }
+
+    .bg-gradient-soft {
+        background: linear-gradient(180deg, rgba(167, 211, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+    }
+
+    /* Clean Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #A7D3FF;
+    }
+
+    /* Hide Scrollbar Utility */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}

@@ -11,11 +11,15 @@ const ConstructionTicker: React.FC = () => {
         We render the text 4 times. When it moves -50% (2 text lengths), 
         the 3rd text block will be in the exact position of the 1st text block.
       */}
-            <div className="whitespace-nowrap animate-marquee flex items-center">
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest">{text} •&nbsp;</span>
+            <div className="flex overflow-hidden w-full">
+                <div className="animate-marquee whitespace-nowrap flex items-center min-w-full shrink-0">
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest mx-4">{text}</span>
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest mx-4">{text}</span>
+                </div>
+                <div className="animate-marquee whitespace-nowrap flex items-center min-w-full shrink-0">
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest mx-4">{text}</span>
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 uppercase font-display tracking-widest mx-4">{text}</span>
+                </div>
             </div>
 
             {/* Fade edges for smoother look - made more subtle */}

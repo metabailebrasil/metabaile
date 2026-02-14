@@ -5,139 +5,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>METABAILE - O Palco é Seu</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              primary: '#A7D3FF', // Baby Blue requested
-              secondary: '#82C0FF', // Slightly deeper for gradients
-              dark: '#0f172a', // Slate 900 - High Contrast Text
-              gray: '#64748b', // Slate 500 - Body Text
-              light: '#f8fafc', // Slate 50 - Off-white background
-              surface: '#ffffff',
-            }
-          },
-          animation: {
-            'float': 'float 3s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'marquee': 'marquee 25s linear infinite',
-            'slide-up': 'slideUp 0.5s ease-out',
-            'fade-in': 'fadeIn 0.3s ease-out',
-          },
-          keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-10px)' },
-            },
-            marquee: {
-              '0%': { transform: 'translateX(0)' },
-              '100%': { transform: 'translateX(-50%)' },
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body {
-      background-color: #f8fafc;
-      color: #0f172a;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      cursor: url('/cursor.png?v=1') 16 16, auto;
-    }
-
-    /* Apple-style Soft UI / Glassmorphism */
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.65);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 8px 32px rgba(167, 211, 255, 0.15);
-      /* Soft Blue Shadow */
-    }
-
-    .glass-panel-strong {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 20px 40px rgba(167, 211, 255, 0.2);
-    }
-
-    .text-gradient {
-      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-      /* Dark gradient for crisp text */
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .bg-gradient-brand {
-      background: linear-gradient(135deg, #A7D3FF 0%, #82C0FF 100%);
-    }
-
-    .bg-gradient-soft {
-      background: linear-gradient(180deg, rgba(167, 211, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
-    }
-
-    /* Clean Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #A7D3FF;
-    }
-
-    /* Hide Scrollbar Utility */
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
-    }
-
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  </style>
-  <script>
-      (function () {
-        const img = new Image();
-        img.src = '/cursor.png?v=1';
-        img.onload = function () {
-          if (img.width > 128 || img.height > 128) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 32;
-            canvas.height = 32;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, 32, 32);
-            const dataUrl = canvas.toDataURL('image/png');
-            const style = document.createElement('style');
-            style.innerHTML = `
+    (function () {
+      const img = new Image();
+      img.src = '/cursor.png?v=1';
+      img.onload = function () {
+        if (img.width > 128 || img.height > 128) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 32;
+          canvas.height = 32;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 32, 32);
+          const dataUrl = canvas.toDataURL('image/png');
+          const style = document.createElement('style');
+          style.innerHTML = `
               body, button, a {
                 cursor: url('${dataUrl}') 8 8, auto !important;
               }
             `;
-            document.head.appendChild(style);
-          }
-        };
-        img.onerror = function () {
-          console.warn('Failed to load custom cursor image');
-        };
-      })();
+          document.head.appendChild(style);
+        }
+      };
+      img.onerror = function () {
+        console.warn('Failed to load custom cursor image');
+      };
+    })();
   </script>
 </head>
 

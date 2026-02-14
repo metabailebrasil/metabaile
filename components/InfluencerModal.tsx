@@ -21,14 +21,12 @@ const InfluencerModal: React.FC<InfluencerModalProps> = ({ isOpen, onClose }) =>
         setError(null);
         setLoading(true);
 
-        // Basic Validation
         if (!name.trim() || !instagram.trim() || !whatsapp.trim()) {
             setError('Por favor, preencha todos os campos.');
             setLoading(false);
             return;
         }
 
-        // Add @ prefix to instagram if missing
         const formattedInstagram = instagram.startsWith('@') ? instagram : `@${instagram}`;
 
         try {
@@ -44,13 +42,9 @@ const InfluencerModal: React.FC<InfluencerModalProps> = ({ isOpen, onClose }) =>
                 ]);
 
             if (insertError) throw insertError;
-
             setSuccess(true);
-            // Auto-close removed as per request
-
         } catch (err: any) {
             console.error('Error submitting lead:', err);
-            // Show actual error to help debugging
             setError(err.message || 'Erro ao enviar. Tente novamente.');
         } finally {
             setLoading(false);
@@ -59,7 +53,6 @@ const InfluencerModal: React.FC<InfluencerModalProps> = ({ isOpen, onClose }) =>
 
     const handleClose = () => {
         onClose();
-        // Reset state after animation
         setTimeout(() => {
             setSuccess(false);
             setName('');
@@ -73,132 +66,135 @@ const InfluencerModal: React.FC<InfluencerModalProps> = ({ isOpen, onClose }) =>
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    {/* Overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={handleClose}
-                        className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer"
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
                     />
 
-                    {/* Modal Card */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative bg-white/90 backdrop-blur-xl border border-white/50 w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden z-10"
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        // Main Container - Neon Deep Blue/Purple Theme
+                        className="relative bg-slate-900 border border-indigo-500/50 w-full max-w-sm rounded-[2.5rem] shadow-[0_0_50px_rgba(79,70,229,0.3)] overflow-hidden z-10"
                     >
-                        {/* Header Image/Gradient */}
-                        <div className="h-40 bg-gradient-to-br from-sky-400 via-blue-400 to-indigo-400 relative flex flex-col items-center justify-center overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-                            {/* Decorative Circles */}
-                            <div className="absolute top-[-20%] left-[-20%] w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
-                            <div className="absolute bottom-[-20%] right-[-20%] w-40 h-40 bg-indigo-500/20 rounded-full blur-2xl"></div>
-
-                            <div className="relative z-10 text-center px-6">
-                                <span className="block text-blue-100 font-bold tracking-[0.2em] text-xs mb-1 uppercase">Seja Nosso</span>
-                                <h2 className="text-3xl font-display font-black text-white tracking-tight drop-shadow-sm uppercase mb-2">
-                                    Influencer
-                                </h2>
-                                <p className="text-white/90 text-[10px] sm:text-xs font-medium leading-relaxed max-w-[240px] mx-auto border-t border-white/20 pt-2 mt-1">
-                                    Junte-se aos criadores que estão revolucionando a cena do ao vivo.
-                                </p>
-                            </div>
+                        {/* Header Section */}
+                        <div className="relative pt-10 pb-6 text-center px-6 bg-gradient-to-b from-indigo-600/20 to-transparent">
+                            {/* Neon Glow Effects */}
+                            <div className="absolute top-[-50%] left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px]" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/20 rounded-full blur-[60px]" />
 
                             <button
                                 onClick={handleClose}
-                                className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-colors backdrop-blur-sm"
+                                className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full"
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </button>
+
+                            <span className="relative z-10 text-cyan-300 font-bold tracking-[0.2em] text-[10px] uppercase mb-1 block">
+                                Seja Nosso
+                            </span>
+                            <h2 className="relative z-10 text-4xl font-display font-black text-white italic tracking-tighter uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                                Influencer
+                            </h2>
+                            <p className="relative z-10 text-indigo-200/80 text-xs font-medium leading-relaxed max-w-[220px] mx-auto mt-2">
+                                Junte-se aos criadores que estão revolucionando a cena do ao vivo.
+                            </p>
                         </div>
 
-                        {/* Content */}
-                        <div className="p-6">
+                        {/* Content Section */}
+                        <div className="p-8 pt-2">
                             {success ? (
-                                <div className="flex flex-col items-center justify-center py-6 text-center animate-fade-in">
-                                    <div className="w-16 h-16 bg-sky-100 text-sky-500 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-lg">
-                                        <CheckCircle size={32} />
+                                <div className="flex flex-col items-center justify-center py-8 text-center animate-fade-in">
+                                    <div className="w-20 h-20 bg-gradient-to-tr from-cyan-400 to-indigo-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(6,182,212,0.5)]">
+                                        <CheckCircle size={40} className="text-white" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-800 mb-2">Aplicação Enviada!</h3>
-                                    <p className="text-slate-500 text-sm leading-relaxed mb-6">Nossa equipe analisará seu perfil.<br />Fique de olho no WhatsApp.</p>
-
+                                    <h3 className="text-2xl font-bold text-white mb-2">Sucesso!</h3>
+                                    <p className="text-indigo-200 text-sm leading-relaxed mb-8 max-w-[200px]">
+                                        Nossa equipe analisará seu perfil. Fique de olho no WhatsApp.
+                                    </p>
                                     <button
                                         onClick={handleClose}
-                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-8 rounded-xl transition-colors text-sm"
+                                        className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 px-8 rounded-2xl transition-all text-sm border border-white/10"
                                     >
                                         Fechar
                                     </button>
                                 </div>
                             ) : (
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <p className="text-slate-500 text-xs text-center mb-1 px-4 leading-relaxed">
-                                        Preencha seus dados para aplicarmos a verificação oficial de <strong>Influencer Metabaile</strong>.
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <p className="text-indigo-300 text-xs text-center leading-relaxed">
+                                        Preencha seus dados para aplicarmos a verificação oficial de <strong className="text-white">Influencer Metabaile</strong>.
                                     </p>
 
-                                    {/* Name */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2">Nome Completo</label>
-                                        <input
-                                            type="text"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="Ex: Anderson Silva"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all font-medium text-sm"
-                                        />
+                                    {/* Name Input - Cyan Glow */}
+                                    <div className="group">
+                                        <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider ml-2 mb-1.5 block">Nome Completo</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                placeholder="Ex: Anderson Silva"
+                                                className="w-full bg-slate-800/50 border border-cyan-500/30 rounded-2xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-all font-medium text-sm"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Instagram */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2">Instagram</label>
+                                    {/* Instagram Input - Pink/Purple Glow */}
+                                    <div className="group">
+                                        <label className="text-[10px] font-bold text-fuchsia-400 uppercase tracking-wider ml-2 mb-1.5 block">Instagram</label>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <Instagram size={16} />
+                                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-fuchsia-400 pointer-events-none">
+                                                <Instagram size={18} />
                                             </div>
                                             <input
                                                 type="text"
                                                 value={instagram}
                                                 onChange={(e) => setInstagram(e.target.value)}
-                                                placeholder="@seuprofill"
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all font-medium text-sm"
+                                                placeholder="@ seu perfil"
+                                                className="w-full bg-slate-800/50 border border-fuchsia-500/30 rounded-2xl pl-12 pr-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-fuchsia-400 focus:shadow-[0_0_20px_rgba(232,121,249,0.2)] transition-all font-medium text-sm"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* WhatsApp */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2">WhatsApp</label>
+                                    {/* WhatsApp Input - Purple/Violet Glow */}
+                                    <div className="group">
+                                        <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-2 mb-1.5 block">WhatsApp</label>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <MessageCircle size={16} />
+                                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-violet-400 pointer-events-none">
+                                                <MessageCircle size={18} />
                                             </div>
                                             <input
                                                 type="tel"
                                                 value={whatsapp}
                                                 onChange={(e) => setWhatsapp(e.target.value)}
                                                 placeholder="(11) 99999-9999"
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all font-medium text-sm"
+                                                className="w-full bg-slate-800/50 border border-violet-500/30 rounded-2xl pl-12 pr-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-400 focus:shadow-[0_0_20px_rgba(167,139,250,0.2)] transition-all font-medium text-sm"
                                             />
                                         </div>
                                     </div>
 
                                     {error && (
-                                        <p className="text-red-500 text-xs font-bold text-center bg-red-50 py-2 px-4 rounded-lg">{error}</p>
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                                            <p className="text-red-400 text-xs font-bold text-center">{error}</p>
+                                        </div>
                                     )}
 
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed group mt-2"
+                                        className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-[0_10px_30px_rgba(6,182,212,0.3)] hover:shadow-[0_10px_40px_rgba(6,182,212,0.5)] hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
                                     >
                                         {loading ? (
                                             <>
-                                                <Loader2 size={16} className="animate-spin" /> Enviando...
+                                                <Loader2 size={18} className="animate-spin" /> Enviando...
                                             </>
                                         ) : (
                                             <>
-                                                Quero ser Influencer <Send size={16} className="group-hover:translate-x-1 transition-transform" />
+                                                Quero ser Influencer <Send size={18} className="group-hover:translate-x-1 transition-transform" />
                                             </>
                                         )}
                                     </button>

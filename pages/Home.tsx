@@ -8,6 +8,7 @@ import ConstructionTicker from '../components/ConstructionTicker';
 import ImmersivePlayer from '../components/ImmersivePlayer';
 import InfluencerModal from '../components/InfluencerModal';
 import WaitlistModal from '../components/WaitlistModal';
+import Toast, { ToastType } from '../components/Toast';
 import {
     APP_NAME,
     FEATURES,
@@ -73,8 +74,16 @@ const ArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => (
     </div>
 );
 
-const PlanCard: React.FC<{ plan: Plan; onSelect: (plan: Plan) => void }> = ({ plan, onSelect }) => (
+const PlanCard: React.FC<{ plan: Plan; onSelect: (plan: Plan) => void; feedback: string | null }> = ({ plan, onSelect, feedback }) => (
     <div className={`relative p-8 rounded-[2rem] border transition-all duration-500 hover:scale-[1.02] group ${plan.highlight ? 'bg-white border-brand-primary shadow-[0_10px_40px_rgba(167,211,255,0.4)]' : 'bg-white/60 backdrop-blur-md border-white/40 hover:border-brand-primary/30 hover:shadow-xl'}`}>
+        {/* Feedback Overlay */}
+        <div className={`absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center rounded-[2rem] transition-opacity duration-300 ${feedback ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                <Check size={32} strokeWidth={3} />
+            </div>
+            <p className="text-xl font-bold text-brand-dark mb-2">Ótima Escolha!</p>
+            <p className="text-brand-gray text-sm leading-relaxed">{feedback}</p>
+        </div>
         {plan.highlight && (
             <>
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/10 to-transparent opacity-50 pointer-events-none rounded-[2rem]" />
@@ -120,6 +129,20 @@ function Home() {
 
     const [user, setUser] = useState<any>(null);
     const [loadingAvatar, setLoadingAvatar] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
+        message: '',
+        type: 'success',
+        isVisible: false
+    });
+    const [planFeedback, setPlanFeedback] = useState<{ planName: string, message: string } | null>(null);
+
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ message, type, isVisible: true });
+    };
+
+    const closeToast = () => {
+        setToast(prev => ({ ...prev, isVisible: false }));
+    };
 
     useEffect(() => {
         // Get initial session
@@ -182,11 +205,11 @@ function Home() {
             // Refresh user state
             const { data: { user: newUser } } = await supabase.auth.getUser();
             setUser(newUser);
-            alert('Foto atualizada com sucesso!');
+            showToast('Foto atualizada com sucesso!', 'success');
 
         } catch (error: any) {
             console.error('Error updating avatar:', error);
-            alert('Erro ao atualizar foto.');
+            showToast('Erro ao atualizar foto.', 'error');
         } finally {
             setLoadingAvatar(false);
         }
@@ -198,7 +221,7 @@ function Home() {
         if (result.error === 'need_auth') {
             navigate('/auth');
         } else {
-            alert('Integração Stripe (Stub): Redirecionando para checkout...');
+            showToast('Integração Stripe (Stub): Redirecionando para checkout...', 'info');
         }
     };
 
@@ -210,21 +233,47 @@ function Home() {
         } else if (plan.name === 'Pista') {
             navigate('/auth');
         } else if (plan.name === 'Fan') {
-            // Fan Plan Logic - Direct to Stripe with specific Product ID
+            // Card Overlay Logic for Fan
+            setPlanFeedback({
+                planName: plan.name,
+                message: `Você escolheu o plano ${plan.name}. Redirecionando para o pagamento...`
+            });
+
             if (activeEvent) {
-                const result = await createCheckoutSession(activeEvent.id, 'prod_TZIG0vlyiE8WyQ');
-                if (result.error === 'need_auth') {
-                    alert("Você precisa fazer login para comprar.");
-                    navigate('/auth');
-                } else if (result.error) {
-                    alert(`Erro: ${result.error}`);
-                }
+                // Delay 1.5s to show feedback beforeredirect
+                setTimeout(async () => {
+                    const result = await createCheckoutSession(activeEvent.id, 'prod_TZIG0vlyiE8WyQ');
+                    if (result.error === 'need_auth') {
+                        // User needs to login. We navigate, which naturally clears the feedback.
+                        // Optionally show a toast on the next screen or before leaving? 
+                        // For now, let's just navigate. The Auth screen is clear.
+                        navigate('/auth');
+                    } else if (result.error) {
+                        setPlanFeedback(null); // Remove overlay to show error
+                        showToast(`Erro: ${result.error}`, 'error');
+                    }
+                    // If success, createCheckoutSession redirects or returns {success:true} in mock mode
+                }, 1500);
+
             } else {
-                setShowWaitlistModal(true);
+                // If no active event, showing waitlist modal
+                // We should probably clear the feedback or change the message
+                setTimeout(() => {
+                    setPlanFeedback(null);
+                    setShowWaitlistModal(true);
+                }, 1000);
             }
         } else {
-            // Default action (e.g., scroll to register or generic alert for now)
-            alert(`Você escolheu o plano ${plan.name}. Em breve redirecionaremos para o pagamento.`);
+            // Card Overlay Logic
+            setPlanFeedback({
+                planName: plan.name,
+                message: `Você escolheu o plano ${plan.name}. Em breve redirecionaremos.`
+            });
+
+            // Clear feedback after 3 seconds
+            setTimeout(() => {
+                setPlanFeedback(null);
+            }, 3000);
         }
     };
 
@@ -333,7 +382,12 @@ function Home() {
                     <SectionTitle title="Escolha Seu Acesso" subtitle="De visitante a VIP. Tem espaço para todo mundo." />
                     <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-6">
                         {PLANS.map((plan, idx) => (
-                            <PlanCard key={idx} plan={plan} onSelect={handlePlanSelect} />
+                            <PlanCard
+                                key={idx}
+                                plan={plan}
+                                onSelect={handlePlanSelect}
+                                feedback={planFeedback?.planName === plan.name ? planFeedback.message : null}
+                            />
                         ))}
                     </div>
                 </div>
@@ -398,6 +452,12 @@ function Home() {
 
             <InfluencerModal isOpen={showInfluencerModal} onClose={() => setShowInfluencerModal(false)} />
             <WaitlistModal isOpen={showWaitlistModal} onClose={() => setShowWaitlistModal(false)} />
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={closeToast}
+            />
         </div>
     );
 }

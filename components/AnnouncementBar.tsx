@@ -14,11 +14,19 @@ const AnnouncementBar: React.FC = () => {
                 Using the exact same logic as ConstructionTicker for consistency.
                 Render text 4 times to overlap the translation.
             */}
-            <div className="whitespace-nowrap animate-marquee flex items-center relative z-10">
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display">{text} •&nbsp;</span>
-                <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display">{text} •&nbsp;</span>
+            {/* 
+                Seamless Marquee:
+                Duplicate content in two containers that move from 0 to -100%
+            */}
+            <div className="flex relative z-10 overflow-hidden w-full">
+                <div className="animate-marquee whitespace-nowrap flex items-center min-w-full shrink-0">
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display mr-4">{text}</span>
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display mr-4">{text}</span>
+                </div>
+                <div className="animate-marquee whitespace-nowrap flex items-center min-w-full shrink-0">
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display mr-4">{text}</span>
+                    <span className="text-xs md:text-sm font-medium text-brand-dark/50 tracking-widest uppercase font-display mr-4">{text}</span>
+                </div>
             </div>
         </div>
     );
