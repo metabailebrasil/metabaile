@@ -156,6 +156,21 @@ const ImmersivePlayer: React.FC = () => {
         }
     };
 
+    const togglePlay = () => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            const newState = !isPlaying;
+            const command = newState ? 'playVideo' : 'pauseVideo';
+
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: command,
+                args: []
+            }), '*');
+
+            setIsPlaying(newState);
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newVolume = parseInt(e.target.value);
         setVolume(newVolume);
@@ -202,12 +217,17 @@ const ImmersivePlayer: React.FC = () => {
                     If logged in: Show YouTube Iframe
                     If NOT logged in: Show Login CTA
                 */}
+                {/* 
+                     --- AUTH GUARD --- 
+                     If logged in: Show YouTube Iframe
+                     If NOT logged in: Show Login CTA
+                */}
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-black">
                         <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 ) : session ? (
-                    <div className="absolute inset-0 w-full h-full bg-black">
+                    <div className="absolute inset-0 w-full h-full bg-black group-hover:cursor-default">
                         <iframe
                             ref={iframeRef}
                             width="100%"
@@ -217,10 +237,13 @@ const ImmersivePlayer: React.FC = () => {
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover pointer-events-none" // Disable interaction with iframe directly
                         ></iframe>
-                        {/* Overlay to prevent direct interaction if needed, or just for styling */}
-                        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]"></div>
+                        {/* Transparent Overlay to block clicks but allow custom controls to work (since they are siblings z-50) */}
+                        <div className="absolute inset-0 bg-transparent z-10"></div>
+
+                        {/* Shadow Overlay for depth/readability of controls */}
+                        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent z-20 pointer-events-none"></div>
                     </div>
                 ) : (
                     /* --- LOGIN CTA (Call to Action) --- */
@@ -297,9 +320,21 @@ const ImmersivePlayer: React.FC = () => {
 
 
 
-                {/* 4. Bottom Left Controls (Volume) */}
+                {/* 4. Bottom Left Controls (Play/Pause & Volume) */}
                 <div className={`absolute bottom-3 left-3 z-50 transition-all duration-500 ${isHovered || !session ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full p-1 pr-3 border border-white/10 group/volume">
+                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full p-1 pr-3 border border-white/10 group/volume shadow-lg">
+
+                        {/* Play/Pause Button */}
+                        <button
+                            onClick={togglePlay}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                            title={isPlaying ? "Pausar" : "Reproduzir"}
+                        >
+                            {isPlaying ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" className="ml-0.5" />}
+                        </button>
+
+                        <div className="w-px h-4 bg-white/10 mx-1"></div>
+
                         {/* Volume Toggle */}
                         <button
                             onClick={toggleMute}
@@ -316,7 +351,7 @@ const ImmersivePlayer: React.FC = () => {
                             max="100"
                             value={isMuted ? 0 : volume}
                             onChange={handleVolumeChange}
-                            className="w-0 group-hover/volume:w-20 transition-all duration-300 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+                            className="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full hover:bg-white/30 transition-all"
                         />
                     </div>
                 </div>

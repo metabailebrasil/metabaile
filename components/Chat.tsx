@@ -149,11 +149,6 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const scrollToBottom = (smooth = true, targetIndex = -1) => {
-        const index = targetIndex >= 0 ? targetIndex : messages.length - 1;
-        virtuosoRef.current?.scrollToIndex({ index, behavior: smooth ? 'smooth' : 'auto' });
-    };
-
     // Removed manual handleScroll, handled by Virtuoso
 
     // Timer Logic
@@ -198,6 +193,19 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         }
     };
 
+    // Use current messages ref to fix stale closure in callbacks/timeouts
+    const messagesRef = useRef(messages);
+    useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+    const scrollToBottom = (smooth = true, targetIndex = -1) => {
+        // Use ref if available to get fresh state, otherwise fallback to prop (which might be stale in timeout)
+        const currentMessages = messagesRef.current;
+        const index = targetIndex >= 0 ? targetIndex : currentMessages.length - 1;
+        if (index >= 0) {
+            virtuosoRef.current?.scrollToIndex({ index, behavior: smooth ? 'smooth' : 'auto' });
+        }
+    };
+
     // Realtime
     useEffect(() => {
         const channelId = activeTab === 'public' ? 'public-chat' : `room-${activeRoomId}`;
@@ -231,12 +239,34 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
                     newMsg.isMe = session?.user?.id === newMsg.user_id;
                     setMessages(prev => {
+                        // 1. Check if we already have this EXACT id
                         if (prev.some(msg => msg.id === newMsg.id)) return prev;
+
+                        // 2. Check for a PENDING message to reconcile (same content, same user)
+                        // This prevents duplication of optimistic messages
+                        const pendingIndex = prev.findIndex(m =>
+                            m.status === 'PENDING' &&
+                            m.user_id === newMsg.user_id &&
+                            m.content === newMsg.content
+                        );
+
+                        if (pendingIndex !== -1) {
+                            const updated = [...prev];
+                            updated[pendingIndex] = { ...newMsg, isMe: true };
+                            return updated;
+                        }
+
                         const updated = [...prev, newMsg];
                         return updated.length > MAX_MESSAGES ? updated.slice(updated.length - MAX_MESSAGES) : updated;
                     });
-                    if (isScrolledNearBottom) setTimeout(() => scrollToBottom(true), 50);
-                    else setHasNewMessages(true);
+
+                    // If we are at bottom, Virtuoso's followOutput handles the scroll. 
+                    // But we can trigger a check just in case.
+                    if (isScrolledNearBottom) {
+                        // let virtuoso handle it via followOutput='auto'
+                    } else {
+                        setHasNewMessages(true);
+                    }
                 } else if (payload.eventType === 'UPDATE') {
                     const updatedMsg = payload.new as Message;
                     // If status changed to CONFIRMED, add it if not present
@@ -283,7 +313,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
         // Optimistic Update
         setMessages(prev => [...prev, messageData as Message]);
         setInputValue('');
-        setTimeout(() => scrollToBottom(true), 50);
+        setTimeout(() => scrollToBottom(false), 50); // Instant scroll to prevent jank
         setLastMessageTime(now);
 
         const { error } = await supabase.from('messages').insert([{
@@ -537,9 +567,9 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                             </div>
                         )}
 
-                        {/* Tabs for Groups */}
+                        {/* Tabs for Groups - Ultra Thin Aesthetic Scrollbar */}
                         {activeTab === 'group' && (
-                            <div className="p-2 bg-black/20 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
+                            <div className="p-2 bg-black/20 border-b border-white/5 flex gap-2 overflow-x-auto pb-2 shrink-0 file:scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                                 {/* ... existing group buttons ... */}
                                 <button onClick={() => setShowCreateModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1 text-xs font-bold"><Plus size={14} /> Nova</button>
                                 <button onClick={() => setShowJoinModal(true)} className="flex-shrink-0 px-3 py-1 rounded-full bg-slate-800/50 text-slate-400 border border-white/10 flex items-center gap-1 text-xs font-bold"><Hash size={14} /> Entrar</button>
@@ -552,25 +582,23 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
 
                                 <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
                                 {myRooms.map(room => (
-                                    <div key={room.id} className={cn("flex items-center rounded-full border transition-all whitespace-nowrap pr-1 flex-shrink-0", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>
-                                        <button onClick={() => setActiveRoomId(room.id)} className="px-3 py-1 text-xs font-bold flex items-center gap-1">
-                                            {room.emoji} {room.name}
+                                    <div key={room.id} className={cn("flex items-center rounded-full border transition-all whitespace-nowrap pr-1 flex-shrink-0 max-w-[200px]", activeRoomId === room.id ? 'bg-sky-500 text-white border-sky-500' : 'bg-slate-800/50 text-slate-400 border-white/10')}>
+                                        <button onClick={() => setActiveRoomId(room.id)} className="px-3 py-1 text-xs font-bold flex items-center gap-1 min-w-0 overflow-hidden">
+                                            <span className="shrink-0">{room.emoji}</span>
+                                            <span className="truncate">{room.name}</span>
                                         </button>
-                                        {/* DEBUG: Always show button for testing */}
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRoom(room.id); }} className={cn("p-1 rounded-full hover:bg-white/20 transition-colors", "text-red-400")}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRoom(room.id); }} className={cn("p-1 rounded-full hover:bg-white/20 transition-colors shrink-0", "text-red-400")}>
                                             <Trash2 size={14} />
                                         </button>
-                                        {/* Original check was: {room.created_by === session?.user?.id && ...} */}
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* Messages List */}
                         {activeTab === 'group' && myRooms.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-80"><Users size={32} className="text-sky-400 mb-4" /><h3 className="text-white font-bold">Resenha Privada</h3><p className="text-slate-400 text-sm mb-4">Crie uma sala para seus amigos.</p><button onClick={() => setShowCreateModal(true)} className="px-6 py-2 bg-sky-500 text-white font-bold rounded-full">Criar Sala</button></div>
                         ) : (
-                            <>
+                            <div className="flex-1 min-h-0 relative">
                                 <Virtuoso
                                     ref={virtuosoRef}
                                     style={{ height: '100%' }}
@@ -580,9 +608,8 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                         if (isAtBottom) {
                                             setHasNewMessages(false);
                                             setIsScrolledNearBottom(true);
-                                            return 'smooth';
+                                            return 'auto'; // Instant snap
                                         }
-                                        // Start "new messages" only if not at bottom
                                         if (!isScrolledNearBottom) setHasNewMessages(true);
                                         return false;
                                     }}
@@ -591,6 +618,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                         if (atBottom) setHasNewMessages(false);
                                     }}
                                     initialTopMostItemIndex={messages.length - 1} // Start at bottom
+                                    components={{ Footer: () => <div className="h-2" /> }} // Add breathing room at bottom
                                 />
 
                                 {!isScrolledNearBottom && hasNewMessages && (
@@ -601,13 +629,13 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                         <ArrowDown size={14} /> Novas mensagens
                                     </button>
                                 )}
-                            </>
+                            </div>
                         )}
 
 
                         {/* Input */}
                         {session ? (
-                            <div className="p-4 bg-gradient-to-t from-slate-900/90 to-transparent border-t border-white/5 relative z-20">
+                            <div className="p-4 bg-gradient-to-t from-slate-900/90 to-transparent border-t border-white/5 relative z-20 shrink-0">
                                 {warning && <div className="absolute bottom-full left-4 right-4 mb-2 bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 text-xs shadow-lg"><AlertTriangle size={14} />{warning}</div>}
                                 <div className="relative group">
                                     <input
@@ -625,7 +653,7 @@ const Chat: React.FC<{ className?: string }> = ({ className = '' }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-6 text-center bg-gradient-to-t from-slate-900/80 to-transparent"><button onClick={() => window.location.href = '/auth'} className="px-8 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-400 shadow-xl shadow-sky-500/20 transition-all transform active:scale-95 text-sm uppercase tracking-wide">Entrar no Chat</button></div>
+                            <div className="p-6 text-center bg-gradient-to-t from-slate-900/80 to-transparent shrink-0"><button onClick={() => window.location.href = '/auth'} className="px-8 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-400 shadow-xl shadow-sky-500/20 transition-all transform active:scale-95 text-sm uppercase tracking-wide">Entrar no Chat</button></div>
                         )}
 
                         {/* Modals */}
