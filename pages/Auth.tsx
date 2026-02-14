@@ -157,64 +157,61 @@ const Auth: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-dark text-white flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Elements */}
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand-primary/20 rounded-full blur-[120px] pointer-events-none"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-brand-secondary/20 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="min-h-screen bg-[#F0F4F8] text-brand-dark flex items-center justify-center p-4 relative overflow-hidden">
+            {/* RICH MESH GRADIENT BACKGROUND */}
+            <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[70%] bg-purple-300/30 rounded-full blur-[100px] animate-float opacity-70"></div>
+            <div className="absolute bottom-[-30%] right-[-20%] w-[70%] h-[70%] bg-blue-300/30 rounded-full blur-[100px] animate-float animation-delay-2000 opacity-70"></div>
+            <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-pink-300/20 rounded-full blur-[80px] animate-pulse-slow opacity-60"></div>
+            {/* Noise Texture Overlay for Premium Feel */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-            <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10">
+            {/* Main Card - Ultra Glassmorphism */}
+            <div className="w-full max-w-md bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-8 md:p-10 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-white/50 animate-fade-in-up">
 
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="font-display text-4xl font-bold mb-2 bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
-                        METABAILE
-                    </h1>
-                    <p className="text-white/60 text-sm">
-                        {isLogin ? "Bem-vindo de volta ao futuro." : "Crie sua conta e entre para a história."}
+                {/* Header - High Impact */}
+                <div className="text-center mb-10">
+                    <div className="inline-block relative">
+                        <h1 className="font-display text-5xl md:text-6xl font-black mb-3 tracking-tighter bg-gradient-to-br from-brand-dark via-brand-dark to-brand-primary/80 bg-clip-text text-transparent drop-shadow-sm">
+                            METABAILE
+                        </h1>
+                        <div className="absolute -top-6 -right-6 text-brand-primary/20 rotate-12 animate-pulse-slow">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
+                        </div>
+                    </div>
+
+                    <p className="text-brand-gray/80 font-bold text-xs md:text-sm tracking-[0.2em] uppercase">
+                        {isLogin ? "Bem-vindo ao futuro" : "Entre para a história"}
                     </p>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex bg-black/20 rounded-full p-1 mb-8">
-                    <button
-                        onClick={() => setIsLogin(true)}
-                        className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all ${isLogin ? 'bg-brand-primary text-brand-dark shadow-lg' : 'text-white/60 hover:text-white'}`}
-                    >
-                        Entrar
-                    </button>
-                    <button
-                        onClick={() => setIsLogin(false)}
-                        className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all ${!isLogin ? 'bg-brand-primary text-brand-dark shadow-lg' : 'text-white/60 hover:text-white'}`}
-                    >
-                        Cadastrar
-                    </button>
-                </div>
+                {/* Tabs Removed - Moved to bottom as requested */}
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm text-center">
+                    <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium text-center flex items-center justify-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                         {error}
                     </div>
                 )}
 
                 {/* Form */}
-                <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-4">
+                <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-5">
 
                     {!isLogin && (
                         <>
                             {/* Avatar Upload */}
-                            <div className="flex flex-col items-center mb-4">
-                                <div className="relative group cursor-pointer">
-                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/10 group-hover:border-brand-primary transition-all bg-black/40 flex items-center justify-center">
+                            <div className="flex flex-col items-center mb-6">
+                                <label htmlFor="avatar-upload" className="relative group cursor-pointer transition-transform active:scale-95">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:border-brand-primary/30 transition-all bg-brand-light flex items-center justify-center relative z-0">
                                         {avatarPreview ? (
                                             <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
                                         ) : (
-                                            <User size={40} className="text-white/30" />
+                                            <User size={32} className="text-brand-dark/20" />
                                         )}
                                     </div>
-                                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-brand-primary text-brand-dark p-2 rounded-full cursor-pointer hover:bg-white transition-colors shadow-lg">
-                                        <Camera size={16} />
-                                    </label>
+                                    <div className="absolute bottom-0 right-0 bg-brand-dark text-white p-2.5 rounded-full hover:bg-brand-primary hover:text-brand-dark transition-all shadow-lg group-hover:scale-110 z-10">
+                                        <Camera size={14} />
+                                    </div>
                                     <input
                                         id="avatar-upload"
                                         type="file"
@@ -222,75 +219,77 @@ const Auth: React.FC = () => {
                                         className="hidden"
                                         onChange={handleFileChange}
                                     />
-                                </div>
-                                <span className="text-xs text-white/50 mt-2">Adicionar foto de perfil</span>
+                                </label>
+                                <label htmlFor="avatar-upload" className="text-xs font-bold text-brand-primary uppercase tracking-widest mt-3 cursor-pointer hover:text-brand-secondary transition-colors">
+                                    Adicionar Foto
+                                </label>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1">Nome Completo</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-brand-dark/60 uppercase tracking-wider ml-1">Nome Completo</label>
                                 <div className="relative">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-dark/30" size={18} />
                                     <input
                                         type="text"
                                         required
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all"
-                                        placeholder="Seu nome"
+                                        className="w-full bg-white border border-brand-dark/10 rounded-xl py-3.5 pl-12 pr-4 text-brand-dark placeholder-brand-dark/30 focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all font-medium shadow-sm"
+                                        placeholder="Ana Silva"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1">Data de Nascimento</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-brand-dark/60 uppercase tracking-wider ml-1">Data de Nascimento</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-dark/30" size={18} />
                                     <input
                                         type="date"
                                         required
                                         value={birthDate}
                                         onChange={(e) => setBirthDate(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all [color-scheme:dark]"
+                                        className="w-full bg-white border border-brand-dark/10 rounded-xl py-3.5 pl-12 pr-4 text-brand-dark placeholder-brand-dark/30 focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all font-medium shadow-sm"
                                     />
                                 </div>
                             </div>
                         </>
                     )}
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1">Email</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-dark/60 uppercase tracking-wider ml-1">Email</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-dark/30" size={18} />
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all"
-                                placeholder="seu@email.com"
+                                className="w-full bg-white border border-brand-dark/10 rounded-xl py-3.5 pl-12 pr-4 text-brand-dark placeholder-brand-dark/30 focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all font-medium shadow-sm"
+                                placeholder="exemplo@email.com"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1">Senha</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-dark/60 uppercase tracking-wider ml-1">Senha</label>
                         <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-dark/30" size={18} />
                             <input
                                 type="password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all"
+                                className="w-full bg-white border border-brand-dark/10 rounded-xl py-3.5 pl-12 pr-4 text-brand-dark placeholder-brand-dark/30 focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all font-medium shadow-sm"
                                 placeholder="••••••••"
                             />
                         </div>
                     </div>
 
                     {!isLogin && (
-                        <div className="space-y-2 pt-2">
-                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider ml-1 flex items-center gap-2">
-                                <Music size={14} /> O que você curte?
+                        <div className="space-y-3 pt-2">
+                            <label className="text-xs font-bold text-brand-dark/60 uppercase tracking-wider ml-1 flex items-center gap-2">
+                                <Music size={14} className="text-brand-primary" /> Seu estilo musical
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {genres.map(genre => (
@@ -298,9 +297,9 @@ const Auth: React.FC = () => {
                                         key={genre}
                                         type="button"
                                         onClick={() => toggleGenre(genre)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selectedGenres.includes(genre)
-                                            ? 'bg-brand-primary border-brand-primary text-brand-dark'
-                                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300 ${selectedGenres.includes(genre)
+                                            ? 'bg-brand-dark text-white border-brand-dark shadow-lg transform scale-105'
+                                            : 'bg-white border-brand-dark/10 text-brand-gray hover:border-brand-primary/50 hover:text-brand-dark'
                                             }`}
                                     >
                                         {genre}
@@ -313,7 +312,7 @@ const Auth: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary text-brand-dark font-bold py-4 rounded-xl mt-6 hover:opacity-90 transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-brand-dark text-white font-bold py-4 rounded-xl mt-6 hover:bg-slate-800 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-xl shadow-brand-dark/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                         {loading ? (
                             <Loader2 className="animate-spin" size={20} />
@@ -325,7 +324,35 @@ const Auth: React.FC = () => {
                         )}
                     </button>
 
+                    {/* Bottom Options */}
+                    <div className="mt-8 space-y-4 text-center">
+                        {isLogin && (
+                            <button
+                                type="button"
+                                className="block w-full text-sm font-medium text-brand-gray hover:text-brand-primary transition-colors"
+                            >
+                                Esqueceu sua senha?
+                            </button>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="block w-full text-sm font-bold text-brand-dark hover:text-brand-primary transition-colors"
+                        >
+                            {isLogin ? "Ainda não tem conta? Cadastre-se" : "Já tem uma conta? Entrar"}
+                        </button>
+                    </div>
+
                 </form>
+
+                {/* Footer / Links */}
+                <div className="mt-8 text-center">
+                    <p className="text-xs text-brand-gray/60">
+                        Ao continuar, você concorda com nossos <br />
+                        <span className="text-brand-dark font-bold cursor-pointer hover:underline">Termos de Uso</span> e <span className="text-brand-dark font-bold cursor-pointer hover:underline">Privacidade</span>.
+                    </p>
+                </div>
             </div>
         </div>
     );
